@@ -504,7 +504,7 @@ input, select, textarea {
   left: 10px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .auth-panel { grid-template-columns: 1fr; padding: 28px 20px; margin: 2rem auto; }
   .auth-art { min-height: 280px; }
   .auth-panel .socials { grid-template-columns: 1fr; }
@@ -616,7 +616,7 @@ input, select, textarea {
   margin: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .profile-panel { grid-template-columns: 1fr; }
 }
 
@@ -1603,7 +1603,7 @@ input, select, textarea {
   .deal-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 767px) {
   .deal-banner-inner { grid-template-columns: 1fr; padding: var(--space-3xl); }
   .deal-products-grid { grid-template-columns: 1fr; }
 }

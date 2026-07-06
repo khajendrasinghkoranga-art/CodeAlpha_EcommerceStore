@@ -1,0 +1,238 @@
+/* Responsive fixes for mobile, tablet, and desktop layouts */
+
+:root {
+  --max-width-mobile: 100%;
+  --max-width-tablet: 100%;
+}
+
+@media (max-width: 1200px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+  .hero .container,
+  .deal-banner-inner,
+  .profile-panel,
+  .auth-panel {
+    gap: 2rem;
+  }
+  .hero-visual {
+    justify-content: flex-start;
+  }
+  .hero-stats,
+  .hero-cta-group {
+    gap: 1rem;
+  }
+  .brands-marquee {
+    gap: 2rem;
+  }
+}
+
+/* Tablet + large mobile: 768px to 1023px */
+@media (max-width: 1023px) {
+  .nav-menu {
+    display: none;
+  }
+  .nav-hamburger {
+    display: flex;
+  }
+  .nav-actions {
+    gap: 0.75rem;
+  }
+  .hero {
+    padding-top: calc(var(--nav-height) + 1rem);
+  }
+  .hero .container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .hero-visual,
+  .hero-content {
+    width: 100%;
+  }
+  .hero-product-card {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+  .hero-description {
+    max-width: 100%;
+  }
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-cta-group .btn {
+    width: 100%;
+  }
+  .brands-marquee {
+    animation-duration: 18s;
+    gap: 1.5rem;
+  }
+  .categories-grid,
+  .deal-products-grid,
+  .features-grid,
+  .testimonials-grid,
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  .deal-banner-inner {
+    grid-template-columns: 1fr;
+    padding: 2rem;
+  }
+  .hero-floating-card-1 {
+    top: 6%;
+    left: 5%;
+  }
+  .hero-floating-card-2 {
+    bottom: 6%;
+    right: 5%;
+  }
+  .back-to-top {
+    right: 16px;
+    bottom: 16px;
+  }
+  .cart-sidebar {
+    width: 100%;
+  }
+}
+
+/* Large mobile: 768px to 991px */
+@media (min-width: 768px) and (max-width: 991px) {
+  .hero .container,
+  .deal-banner-inner,
+  .profile-panel,
+  .auth-panel {
+    gap: 1.75rem;
+  }
+  .hero .container {
+    grid-template-columns: 1fr;
+  }
+  .hero-title {
+    font-size: clamp(2.4rem, 6vw, 3rem);
+  }
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+  }
+  .categories-grid,
+  .deal-products-grid,
+  .features-grid,
+  .testimonials-grid,
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet: 992px to 1023px */
+@media (min-width: 992px) and (max-width: 1023px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+  .hero .container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .deal-banner-inner {
+    grid-template-columns: 1fr;
+    padding: 2rem;
+  }
+  .footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+  }
+  .categories-grid,
+  .deal-products-grid,
+  .features-grid,
+  .testimonials-grid,
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile: up to 767px */
+@media (max-width: 767px) {
+  .navbar .container {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+  }
+  .nav-logo {
+    font-size: 1.4rem;
+  }
+  .hero {
+    min-height: auto;
+    padding-bottom: 3rem;
+  }
+  .hero-title {
+    font-size: clamp(2.2rem, 7vw, 3.4rem);
+  }
+  .hero-description {
+    font-size: 1rem;
+  }
+  .hero-stats {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-product-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .hero-product-price {
+    font-size: 1.3rem;
+  }
+  .deal-countdown {
+    flex-wrap: wrap;
+  }
+  .countdown-item {
+    flex: 1;
+  }
+  .newsletter-form {
+    flex-direction: column;
+  }
+  .newsletter-input {
+    width: 100%;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .container {
+    padding: 0 1rem;
+  }
+  .nav-actions {
+    gap: 0.5rem;
+  }
+  .nav-action-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+  .hero-product-card,
+  .deal-banner-inner,
+  .deal-card,
+  .feature-card,
+  .testimonial-card {
+    padding: 1.25rem;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .search-modal,
+  .checkout-modal,
+  .quickview-modal {
+    width: 100%;
+    max-width: 100%;
+  }
+}
