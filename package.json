@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "This project is a static frontend with an optional Express backend to serve files and provide simple API endpoints.",
   "dependencies": {
     "express": "^5.2.1",
     "sqlite3": "^5.1.7",

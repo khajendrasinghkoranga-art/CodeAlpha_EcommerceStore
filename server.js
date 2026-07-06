@@ -379,7 +379,7 @@ const upload = multer({
 // POST upload image
 app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided' });
-  const url = `assets/images/products/${req.file.filename}`;
+  const url = `/assets/images/products/${req.file.filename}`;
   res.json({ success: true, url });
 });
 
