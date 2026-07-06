@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NOVA Store Admin Dashboard — Manage products, users, and orders.">
+  <title>NOVA Admin — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- ═══ ADMIN LOGIN SCREEN ═══ -->
+  <div class="admin-login-screen" id="admin-login-screen">
+    <div class="admin-login-bg-orb admin-login-bg-orb-1"></div>
+    <div class="admin-login-bg-orb admin-login-bg-orb-2"></div>
+    <div class="admin-login-card">
+      <div class="admin-login-logo">
+        <span class="admin-login-logo-icon">⚡</span>
+        <span class="admin-login-logo-text">NOVA</span>
+      </div>
+      <h2 class="admin-login-title">Admin Access</h2>
+      <p class="admin-login-subtitle">Enter your admin credentials to continue</p>
+      <form class="admin-login-form" id="admin-login-form">
+        <div class="admin-login-field">
+          <label for="admin-email">Email</label>
+          <input type="email" id="admin-email" placeholder="admin@nova.com" required autocomplete="email">
+        </div>
+        <div class="admin-login-field">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <div class="admin-login-error" id="admin-login-error" style="display:none;"></div>
+        <button type="submit" class="admin-login-btn" id="admin-login-btn">
+          <span class="admin-login-btn-text">Sign In to Dashboard</span>
+          <span class="admin-login-btn-spinner" id="admin-login-spinner" style="display:none;"></span>
+        </button>
+      </form>
+      <a href="/" class="admin-login-back">← Back to Store</a>
+    </div>
+  </div>
+
+  <!-- ═══ NAVBAR (hidden until admin logged in) ═══ -->
+  <nav class="admin-nav" id="admin-nav" style="display:none;">
+    <div class="admin-nav-inner">
+      <a href="/" class="admin-logo" id="admin-logo">
+        <span class="admin-logo-icon">⚡</span>
+        <span class="admin-logo-text">NOVA</span>
+        <span class="admin-logo-badge">Admin</span>
+      </a>
+      <div class="admin-nav-actions">
+        <a href="/" class="admin-nav-link" id="back-to-store">← Back to Store</a>
+        <button class="admin-nav-btn" id="admin-logout-btn">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN CONTENT (hidden until admin logged in) ═══ -->
+  <main class="admin-main" id="admin-main" style="display:none;">
+    <!-- Stats Row -->
+    <section class="stats-row" id="stats-row">
+      <div class="stat-card stat-card-products" id="stat-products">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-products-value">—</div>
+          <div class="stat-label">Products</div>
+        </div>
+      </div>
+      <div class="stat-card stat-card-users" id="stat-users">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-users-value">—</div>
+          <div class="stat-label">Users</div>
+        </div>
+      </div>
+      <div class="stat-card stat-card-orders" id="stat-orders">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-orders-value">—</div>
+          <div class="stat-label">Orders</div>
+        </div>
+      </div>
+      <div class="stat-card stat-card-revenue" id="stat-revenue">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-revenue-value">—</div>
+          <div class="stat-label">Revenue</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section" id="products-section">
+      <div class="products-header">
+        <h2 class="products-heading">Product Management</h2>
+        <div class="products-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon">🔍</span>
+            <input type="text" class="search-box-input" id="admin-search" placeholder="Search products...">
+          </div>
+          <button class="btn-add-product" id="btn-add-product">
+            <span>+</span> Add Product
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper" id="table-wrapper">
+        <table class="products-table" id="products-table">
+          <thead>
+            <tr>
+              <th class="th-image">Image</th>
+              <th class="th-name">Name</th>
+              <th class="th-category">Category</th>
+              <th class="th-price">Price</th>
+              <th class="th-badge">Badge</th>
+              <th class="th-stock">Stock</th>
+              <th class="th-featured">Featured</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="products-tbody">
+            <!-- Rendered by admin.js -->
+          </tbody>
+        </table>
+        <div class="table-empty" id="table-empty" style="display:none;">
+          <div class="table-empty-icon">📦</div>
+          <div class="table-empty-text">No products found</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══ ADD / EDIT PRODUCT MODAL ═══ -->
+  <div class="modal-overlay" id="product-modal-overlay">
+    <div class="modal" id="product-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Add Product</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <form class="modal-form" id="product-form">
+        <input type="hidden" id="form-product-id">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-name">Product Name *</label>
+            <input type="text" id="form-name" placeholder="e.g. Nova Pro Headphones" required>
+          </div>
+          <div class="form-group">
+            <label for="form-category">Category *</label>
+            <select id="form-category" required>
+              <option value="">Select category</option>
+              <option value="Audio">Audio</option>
+              <option value="Wearables">Wearables</option>
+              <option value="Peripherals">Peripherals</option>
+              <option value="Computing">Computing</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-price">Price (USD) *</label>
+            <input type="number" id="form-price" step="0.01" min="0" placeholder="349" required>
+          </div>
+          <div class="form-group">
+            <label for="form-original-price">Original Price (USD)</label>
+            <input type="number" id="form-original-price" step="0.01" min="0" placeholder="449">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-badge">Badge</label>
+            <select id="form-badge">
+              <option value="">None</option>
+              <option value="hot">🔥 Hot</option>
+              <option value="new">✨ New</option>
+              <option value="sale">💸 Sale</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-rating">Rating</label>
+            <input type="number" id="form-rating" step="0.1" min="0" max="5" placeholder="4.8">
+          </div>
+          <div class="form-group">
+            <label for="form-reviews">Reviews Count</label>
+            <input type="number" id="form-reviews" min="0" placeholder="2400">
+          </div>
+        </div>
+
+        <!-- Image upload -->
+        <div class="form-group">
+          <label>Product Image</label>
+          <div class="image-upload-area" id="image-upload-area">
+            <div class="image-preview" id="image-preview" style="display:none;">
+              <img id="image-preview-img" src="" alt="Preview">
+              <button type="button" class="image-preview-remove" id="image-preview-remove">✕</button>
+            </div>
+            <div class="image-upload-prompt" id="image-upload-prompt">
+              <div class="image-upload-icon">🖼️</div>
+              <div class="image-upload-text">Drop an image or click to upload</div>
+              <div class="image-upload-hint">JPG, PNG, WebP — Max 5MB</div>
+            </div>
+            <input type="file" id="form-image-file" accept="image/*" style="display:none;">
+          </div>
+          <div class="form-row" style="margin-top:0.5rem;">
+            <div class="form-group" style="flex:1;">
+              <input type="text" id="form-image-url" placeholder="Or paste image URL (e.g. assets/images/products/photo.jpg)">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="form-description">Description</label>
+          <textarea id="form-description" rows="3" placeholder="Product description..."></textarea>
+        </div>
+
+        <!-- Specs Editor -->
+        <div class="form-group">
+          <label>Specifications</label>
+          <div class="specs-editor" id="specs-editor">
+            <!-- Spec rows added dynamically -->
+          </div>
+          <button type="button" class="btn-add-spec" id="btn-add-spec">+ Add Spec</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-toggle-group">
+            <label class="toggle-label">
+              <span>In Stock</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="form-instock" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+          </div>
+          <div class="form-group form-toggle-group">
+            <label class="toggle-label">
+              <span>Featured</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="form-featured">
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-save" id="btn-save">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ DELETE CONFIRMATION MODAL ═══ -->
+  <div class="modal-overlay" id="delete-modal-overlay">
+    <div class="modal modal-sm" id="delete-modal">
+      <div class="delete-modal-content">
+        <div class="delete-icon">🗑️</div>
+        <h3 class="delete-title">Delete Product?</h3>
+        <p class="delete-text">This action cannot be undone. <strong id="delete-product-name"></strong> will be permanently removed.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="delete-cancel">Cancel</button>
+          <button type="button" class="btn-delete" id="delete-confirm">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST CONTAINER ═══ -->
+  <div id="admin-toast-container"></div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

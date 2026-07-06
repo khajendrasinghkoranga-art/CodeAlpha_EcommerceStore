@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NOVA Store — Premium tech gear and electronics. Discover curated headphones, smartwatches, keyboards, and more with next-day delivery.">
+  <title>NOVA Store — Premium Tech & Electronics</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo" id="nav-logo">
+        <span class="nav-logo-icon">⚡</span>
+        <span>NOVA</span>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#" class="nav-link active" id="nav-home">Home</a></li>
+        <li><a href="#categories" class="nav-link" id="nav-categories">Categories</a></li>
+        <li><a href="#products" class="nav-link" id="nav-products">Products</a></li>
+        <li><a href="#deals" class="nav-link" id="nav-deals">Deals</a></li>
+        <li><a href="#reviews" class="nav-link" id="nav-reviews">Reviews</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="nav-action-btn" id="search-btn" aria-label="Search">
+          🔍
+        </button>
+        <button class="nav-action-btn" id="wishlist-btn" aria-label="Wishlist">
+          ♡
+          <span class="nav-badge" id="wishlist-count">0</span>
+        </button>
+        <button class="nav-action-btn" id="cart-btn" aria-label="Cart">
+          🛒
+          <span class="nav-badge" id="cart-count">0</span>
+        </button>
+        <button class="nav-action-btn" id="login-btn" aria-label="Login">👤 Login</button>
+        <div class="nav-hamburger" id="hamburger" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-orb hero-bg-orb-1"></div>
+    <div class="hero-bg-orb hero-bg-orb-2"></div>
+    <div class="hero-bg-orb hero-bg-orb-3"></div>
+
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          New Collection 2026
+        </div>
+        <h1 class="hero-title">
+          Elevate Your<br>
+          <span class="gradient-text">Tech Experience</span>
+        </h1>
+        <p class="hero-description">
+          Discover premium electronics curated for those who demand excellence. 
+          From studio-grade audio to cutting-edge wearables — redefine your digital lifestyle.
+        </p>
+        <div class="hero-cta-group">
+          <a href="#products" class="btn btn-primary" id="hero-shop-btn">
+            Shop Collection →
+          </a>
+          <a href="#deals" class="btn btn-outline" id="hero-deals-btn">
+            ✦ View Deals
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-value" data-count="15000">15K+</div>
+            <div class="hero-stat-label">Products</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" data-count="50000">50K+</div>
+            <div class="hero-stat-label">Customers</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">4.9★</div>
+            <div class="hero-stat-label">Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-product-card">
+          <img src="assets/images/products/headphones.png" alt="Nova Pro Headphones" class="hero-product-image" id="hero-product-img">
+          <div class="hero-product-info">
+            <div>
+              <div class="hero-product-name">Nova Pro X</div>
+              <div class="hero-product-category">Wireless Headphones</div>
+            </div>
+            <div class="hero-product-price">₹28,967</div>
+          </div>
+        </div>
+
+        <!-- Floating Cards -->
+        <div class="hero-floating-card hero-floating-card-1">
+          <div class="floating-rating">
+            <span class="floating-stars">★★★★★</span>
+            <span class="floating-text"><span class="floating-number">4.9</span> / 5.0</span>
+          </div>
+        </div>
+        <div class="hero-floating-card hero-floating-card-2">
+          <div class="floating-delivery">
+            <span class="floating-delivery-icon">🚀</span>
+            <div class="floating-delivery-text">
+              <div class="floating-delivery-title">Express Delivery</div>
+              <div class="floating-delivery-sub">Free · Next Day</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       BRANDS MARQUEE
+       ═══════════════════════════════════════════════ -->
+  <section class="brands" id="brands">
+    <div class="brands-label">Trusted by leading brands worldwide</div>
+    <div class="brands-marquee" id="brands-marquee">
+      <span class="brand-item">SONY</span>
+      <span class="brand-item">SAMSUNG</span>
+      <span class="brand-item">APPLE</span>
+      <span class="brand-item">BOSE</span>
+      <span class="brand-item">LOGITECH</span>
+      <span class="brand-item">RAZER</span>
+      <span class="brand-item">CORSAIR</span>
+      <span class="brand-item">SENNHEISER</span>
+      <span class="brand-item">MARSHALL</span>
+      <span class="brand-item">BANG & OLUFSEN</span>
+      <!-- Duplicated for seamless marquee -->
+      <span class="brand-item">SONY</span>
+      <span class="brand-item">SAMSUNG</span>
+      <span class="brand-item">APPLE</span>
+      <span class="brand-item">BOSE</span>
+      <span class="brand-item">LOGITECH</span>
+      <span class="brand-item">RAZER</span>
+      <span class="brand-item">CORSAIR</span>
+      <span class="brand-item">SENNHEISER</span>
+      <span class="brand-item">MARSHALL</span>
+      <span class="brand-item">BANG & OLUFSEN</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       CATEGORIES
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="categories">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">✦ Categories</span>
+        <h2 class="section-title">Browse by <span class="gradient-text">Category</span></h2>
+        <p class="section-subtitle">Explore our carefully curated collection of premium tech across every category</p>
+      </div>
+
+      <div class="categories-grid">
+        <div class="category-card reveal reveal-delay-1" id="cat-audio">
+          <div class="category-icon">🎧</div>
+          <div class="category-name">Audio</div>
+          <div class="category-count">238 Products</div>
+        </div>
+        <div class="category-card reveal reveal-delay-2" id="cat-wearables">
+          <div class="category-icon">⌚</div>
+          <div class="category-name">Wearables</div>
+          <div class="category-count">164 Products</div>
+        </div>
+        <div class="category-card reveal reveal-delay-3" id="cat-peripherals">
+          <div class="category-icon">⌨️</div>
+          <div class="category-name">Peripherals</div>
+          <div class="category-count">312 Products</div>
+        </div>
+        <div class="category-card reveal reveal-delay-4" id="cat-computing">
+          <div class="category-icon">💻</div>
+          <div class="category-name">Computing</div>
+          <div class="category-count">195 Products</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       FEATURED PRODUCTS
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="products">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">🔥 Featured</span>
+        <h2 class="section-title">Trending <span class="gradient-text">Products</span></h2>
+        <p class="section-subtitle">Hand-picked selections that our customers absolutely love</p>
+      </div>
+
+      <!-- Products Control Bar (Filters & Sorting) -->
+      <div class="products-controls reveal">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-category="All">All Products</button>
+          <button class="filter-tab" data-category="Audio">Audio</button>
+          <button class="filter-tab" data-category="Wearables">Wearables</button>
+          <button class="filter-tab" data-category="Peripherals">Peripherals</button>
+          <button class="filter-tab" data-category="Computing">Computing</button>
+        </div>
+        
+        <div class="sort-wrapper">
+          <label for="sort-select" class="sort-label">Sort by:</label>
+          <select id="sort-select" class="sort-select">
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Top Rated</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="products-grid" id="products-grid">
+        <!-- Products will be rendered here dynamically by app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       DEAL BANNER
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="deals">
+    <div class="container">
+      <div class="deal-banner reveal">
+        <div class="deal-banner-inner">
+          <div class="deal-content">
+            <span class="deal-tag">🔥 Limited Time Offer</span>
+            <h2 class="deal-title">
+              Summer Sale<br>
+              Up to <span class="gradient-text">60% Off</span>
+            </h2>
+            <p class="deal-description">
+              Don't miss out on our biggest sale of the year. Premium audio, wearables, and more — at prices you won't believe.
+            </p>
+            <div class="deal-countdown" id="deal-countdown">
+              <div class="countdown-item">
+                <div class="countdown-value" id="countdown-days">02</div>
+                <div class="countdown-label">Days</div>
+              </div>
+              <div class="countdown-item">
+                <div class="countdown-value" id="countdown-hours">14</div>
+                <div class="countdown-label">Hours</div>
+              </div>
+              <div class="countdown-item">
+                <div class="countdown-value" id="countdown-mins">36</div>
+                <div class="countdown-label">Mins</div>
+              </div>
+              <div class="countdown-item">
+                <div class="countdown-value" id="countdown-secs">48</div>
+                <div class="countdown-label">Secs</div>
+              </div>
+            </div>
+            <a href="#products" class="btn btn-primary" id="deal-shop-btn">Shop the Sale →</a>
+          </div>
+          <div class="deal-image-container">
+            <img src="assets/images/products/monitor_ultrawide.jpg" alt="Summer Sale Deal" class="deal-image">
+          </div>
+        </div>
+      </div>
+      <div class="deal-products reveal">
+        <h3 class="section-subtitle" style="margin-bottom: 1.5rem;">Hot deals — curated for you</h3>
+        <div class="deal-products-grid" id="deals-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       FEATURES
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1" id="feat-shipping">
+          <div class="feature-icon">🚚</div>
+          <div class="feature-title">Free Shipping</div>
+          <div class="feature-text">Free delivery on all orders over ₹3,999. Express options available.</div>
+        </div>
+        <div class="feature-card reveal reveal-delay-2" id="feat-returns">
+          <div class="feature-icon">🔄</div>
+          <div class="feature-title">Easy Returns</div>
+          <div class="feature-text">30-day hassle-free returns. No questions asked, full refund.</div>
+        </div>
+        <div class="feature-card reveal reveal-delay-3" id="feat-secure">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">Secure Checkout</div>
+          <div class="feature-text">256-bit SSL encryption. Your data is always protected.</div>
+        </div>
+        <div class="feature-card reveal reveal-delay-4" id="feat-support">
+          <div class="feature-icon">💬</div>
+          <div class="feature-title">24/7 Support</div>
+          <div class="feature-text">Round-the-clock expert support via chat, email, or phone.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       TESTIMONIALS
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">💬 Reviews</span>
+        <h2 class="section-title">What Our <span class="gradient-text">Customers Say</span></h2>
+        <p class="section-subtitle">Real feedback from real people who love their NOVA gear</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal reveal-delay-1" id="review-1">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            "The Nova Pro X headphones are absolutely incredible. The noise cancellation is on another level — I can't hear a thing in my open office. Best purchase I've made this year."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">AK</div>
+            <div>
+              <div class="testimonial-author-name">Alex Kim</div>
+              <div class="testimonial-author-title">Audio Engineer</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-2" id="review-2">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            "Lightning-fast shipping and the product quality is premium. The Titan Smartwatch tracks everything I need for my training. Customer support is also top-notch."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SP</div>
+            <div>
+              <div class="testimonial-author-name">Sarah Patel</div>
+              <div class="testimonial-author-title">Fitness Coach</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-3" id="review-3">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            "I've been shopping at NOVA for two years and the consistency in quality is unmatched. Every product feels premium, and the deals are genuinely good. Highly recommend."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">MJ</div>
+            <div>
+              <div class="testimonial-author-name">Marcus Johnson</div>
+              <div class="testimonial-author-title">Tech Reviewer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       NEWSLETTER
+       ═══════════════════════════════════════════════ -->
+  <section class="section" id="newsletter">
+    <div class="container">
+      <div class="newsletter reveal">
+        <h2 class="newsletter-title">Stay in the <span class="gradient-text">Loop</span></h2>
+        <p class="newsletter-text">
+          Get early access to new arrivals, exclusive deals, and insider-only discounts. No spam, ever.
+        </p>
+        <form class="newsletter-form" id="newsletter-form">
+          <input type="email" class="newsletter-input" id="newsletter-email" placeholder="Enter your email address" required>
+          <button type="submit" class="btn btn-primary" id="newsletter-submit">Subscribe</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════ -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="#" class="nav-logo">
+            <span class="nav-logo-icon">⚡</span>
+            <span>NOVA</span>
+          </a>
+          <p class="footer-brand-description">
+            Premium tech and electronics for the modern lifestyle. Curated quality, exceptional service, delivered to your door.
+          </p>
+          <div class="footer-social">
+            <a href="#" class="footer-social-link" id="social-twitter" aria-label="Twitter">𝕏</a>
+            <a href="#" class="footer-social-link" id="social-instagram" aria-label="Instagram">📸</a>
+            <a href="#" class="footer-social-link" id="social-youtube" aria-label="YouTube">▶</a>
+            <a href="#" class="footer-social-link" id="social-discord" aria-label="Discord">💬</a>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Shop</h3>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link" id="footer-new">New Arrivals</a></li>
+            <li><a href="#" class="footer-link" id="footer-best">Best Sellers</a></li>
+            <li><a href="#" class="footer-link" id="footer-sale">Sale</a></li>
+            <li><a href="#" class="footer-link" id="footer-bundles">Bundles</a></li>
+            <li><a href="#" class="footer-link" id="footer-gift">Gift Cards</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Support</h3>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link" id="footer-faq">FAQ</a></li>
+            <li><a href="#" class="footer-link" id="footer-shipping">Shipping Info</a></li>
+            <li><a href="#" class="footer-link" id="footer-returns">Returns</a></li>
+            <li><a href="#" class="footer-link" id="footer-warranty">Warranty</a></li>
+            <li><a href="#" class="footer-link" id="footer-contact">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Company</h3>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link" id="footer-about">About NOVA</a></li>
+            <li><a href="#" class="footer-link" id="footer-careers">Careers</a></li>
+            <li><a href="#" class="footer-link" id="footer-press">Press</a></li>
+            <li><a href="#" class="footer-link" id="footer-privacy">Privacy Policy</a></li>
+            <li><a href="#" class="footer-link" id="footer-terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copyright">© 2026 NOVA Store. All rights reserved.</div>
+        <div class="footer-payment">
+          <div class="payment-icon">VISA</div>
+          <div class="payment-icon">MC</div>
+          <div class="payment-icon">AMEX</div>
+          <div class="payment-icon">PAY</div>
+          <div class="payment-icon">GPay</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════
+       CART SIDEBAR
+       ═══════════════════════════════════════════════ -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h3 class="cart-title">Your Cart (<span id="cart-item-count">0</span>)</h3>
+      <button class="cart-close" id="cart-close" aria-label="Close cart">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+      <div class="cart-empty" id="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <div class="cart-empty-text">Your cart is empty</div>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span class="cart-subtotal-label">Subtotal</span>
+        <span class="cart-subtotal-value" id="cart-subtotal">₹0.00</span>
+      </div>
+      <button class="cart-checkout-btn" id="cart-checkout-btn">Checkout →</button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       SEARCH MODAL
+       ═══════════════════════════════════════════════ -->
+  <div class="search-overlay" id="search-overlay">
+    <div class="search-modal" id="search-modal">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="search-input" placeholder="Search products, brands, categories..." autofocus>
+        <span class="search-shortcut">ESC</span>
+      </div>
+      <div class="search-suggestions">
+        <div class="search-suggestion-title">Popular Searches</div>
+        <div class="search-suggestion-item" id="suggestion-1">
+          <span class="search-suggestion-icon">🔥</span>
+          <span class="search-suggestion-text">Wireless Headphones</span>
+        </div>
+        <div class="search-suggestion-item" id="suggestion-2">
+          <span class="search-suggestion-icon">🔥</span>
+          <span class="search-suggestion-text">Smartwatch</span>
+        </div>
+        <div class="search-suggestion-item" id="suggestion-3">
+          <span class="search-suggestion-icon">🔥</span>
+          <span class="search-suggestion-text">Mechanical Keyboard</span>
+        </div>
+        <div class="search-suggestion-item" id="suggestion-4">
+          <span class="search-suggestion-icon">🔥</span>
+          <span class="search-suggestion-text">Bluetooth Speaker</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       QUICK VIEW MODAL
+       ═══════════════════════════════════════════════ -->
+  <div class="quickview-overlay" id="quickview-overlay">
+    <div class="quickview-modal" id="quickview-modal">
+      <button class="quickview-close" id="quickview-close" aria-label="Close modal">✕</button>
+      <div class="quickview-content" id="quickview-content">
+        <!-- Content dynamically injected from products.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       CHECKOUT MODAL
+       ═══════════════════════════════════════════════ -->
+  <div class="checkout-overlay" id="checkout-overlay">
+    <div class="checkout-modal" id="checkout-modal">
+      <button class="checkout-close" id="checkout-close" aria-label="Close checkout">✕</button>
+      
+      <div class="checkout-steps" id="checkout-steps">
+        <!-- Step 1: Shipping and Payment Form -->
+        <div class="checkout-step active" id="checkout-step-form">
+          <h2 class="checkout-heading">Complete Your <span class="gradient-text">Order</span></h2>
+          <div class="checkout-grid">
+            <form class="checkout-form" id="checkout-form">
+              <h3 class="checkout-subheading">Shipping Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="shipping-name">Full Name</label>
+                  <input type="text" id="shipping-name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                  <label for="shipping-email">Email Address</label>
+                  <input type="email" id="shipping-email" placeholder="john@example.com" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="shipping-address">Address</label>
+                <input type="text" id="shipping-address" placeholder="123 Tech Lane" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="shipping-city">City</label>
+                  <input type="text" id="shipping-city" placeholder="San Francisco" required>
+                </div>
+                <div class="form-group">
+                  <label for="shipping-zip">ZIP / Postal Code</label>
+                  <input type="text" id="shipping-zip" placeholder="94107" required>
+                </div>
+              </div>
+
+              <h3 class="checkout-subheading" style="margin-top: var(--space-xl);">Payment Details</h3>
+              <div class="form-group">
+                <label for="card-number">Card Number</label>
+                <input type="text" id="card-number" placeholder="•••• •••• •••• ••••" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="card-expiry">Expiry Date</label>
+                  <input type="text" id="card-expiry" placeholder="MM/YY" required>
+                </div>
+                <div class="form-group">
+                  <label for="card-cvc">CVC</label>
+                  <input type="text" id="card-cvc" placeholder="•••" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary checkout-submit-btn" id="place-order-btn">Pay & Place Order →</button>
+            </form>
+
+            <div class="checkout-summary-pane">
+              <h3 class="checkout-subheading">Order Summary</h3>
+              <div class="checkout-summary-items" id="checkout-summary-items">
+                <!-- Injected via app.js -->
+              </div>
+              <div class="checkout-totals">
+                <div class="checkout-total-row">
+                  <span>Subtotal</span>
+                  <span id="checkout-subtotal">₹0.00</span>
+                </div>
+                <div class="checkout-total-row">
+                  <span>Shipping</span>
+                  <span class="shipping-cost" style="color: var(--clr-accent-success);">FREE</span>
+                </div>
+                <div class="checkout-total-row checkout-total-final">
+                  <span>Total</span>
+                  <span id="checkout-total">₹0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Step 2: Processing Spinner -->
+        <div class="checkout-step" id="checkout-step-processing">
+          <div class="checkout-processing">
+            <div class="checkout-spinner"></div>
+            <h3>Authorizing Payment...</h3>
+            <p>Please do not refresh the page or click back.</p>
+          </div>
+        </div>
+
+        <!-- Step 3: Success Checkmark Screen -->
+        <div class="checkout-step" id="checkout-step-success">
+          <div class="checkout-success">
+            <div class="success-icon-wrapper">
+              <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+            <h2>Order Placed Successfully!</h2>
+            <p>Thank you for shopping with NOVA. Your order <strong id="success-order-id">#N-98402</strong> has been confirmed. A confirmation email has been sent to your inbox.</p>
+            <button class="btn btn-primary" id="success-close-btn" style="margin-top: var(--space-xl);">Continue Shopping</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       BACK TO TOP
+       ═══════════════════════════════════════════════ -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+
+  <!-- ═══════════════════════════════════════════════
+       TOAST NOTIFICATION
+       ═══════════════════════════════════════════════ -->
+  <div id="toast-container" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:5000;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NOVA Store — Profile</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="container" style="padding:4rem 1rem;">
+    <section class="auth-panel profile-panel">
+      <div class="left">
+        <div class="profile-badge">
+          <div class="profile-avatar">👤</div>
+          <div>
+            <p class="profile-label">Signed in as</p>
+            <h1 id="profile-name">Loading...</h1>
+            <p id="profile-email" class="profile-email"></p>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button id="logout-btn" class="btn btn-primary">Logout</button>
+          <a href="/login" class="btn btn-outline">Switch account</a>
+        </div>
+
+        <div class="profile-section">
+          <h2>Account details</h2>
+          <div class="profile-card">
+            <div><strong>User ID</strong></div>
+            <div id="profile-id">—</div>
+          </div>
+          <div class="profile-card">
+            <div><strong>Name</strong></div>
+            <div id="profile-fullname">—</div>
+          </div>
+          <div class="profile-card">
+            <div><strong>Email</strong></div>
+            <div id="profile-account-email">—</div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h2>Recent orders</h2>
+          <div id="order-list" class="order-list">
+            <p class="profile-note">Loading your orders…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-art">
+        <div class="art-card profile-art-card">
+          <div class="art-badge">Your dashboard</div>
+          <div class="art-title">Welcome back, <span id="profile-firstname">Shopper</span></div>
+          <div class="art-text">Manage orders, view account details, and keep track of your shopping activity in one place.</div>
+          <div class="art-pill-list profile-pill-list">
+            <span id="order-count-pill">0 orders</span>
+            <span id="order-total-pill">₹0.00 spent</span>
+            <span>Fast checkout</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/profile.js"></script>
+</body>
+</html>
