@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NOVA Store — Register</title>
+  <base href="/">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive-fixes.css">
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-panel">
+      <div class="auth-copy">
+        <span class="feature-pill">Create your account</span>
+        <h1>Join <span class="gradient-text">NOVA</span> today</h1>
+        <p>Sign up to save addresses, track orders, and enjoy a smoother shopping experience.</p>
+
+        <div class="auth-form">
+          <form id="register-form">
+            <label class="field-label" for="name-input">Full name</label>
+            <input id="name-input" type="text" placeholder="Your name" autocomplete="name">
+
+            <label class="field-label" for="email-input">Email address</label>
+            <input id="email-input" type="email" placeholder="you@example.com" autocomplete="email">
+
+            <label class="field-label" for="password-input">Password</label>
+            <input id="password-input" type="password" placeholder="Create a password" autocomplete="new-password">
+
+            <label class="field-label" for="confirm-password-input">Confirm password</label>
+            <input id="confirm-password-input" type="password" placeholder="Confirm password" autocomplete="new-password">
+
+            <button id="register-btn" type="submit" class="btn btn-primary">Create account</button>
+            <div id="register-error" class="login-error" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <p class="return-store">Already have an account? <a href="/login">Sign in</a></p>
+      </div>
+
+      <div class="auth-art">
+        <div class="art-card">
+          <div class="art-badge">Fast signup</div>
+          <div class="art-title">Shop faster with a personal account</div>
+          <div class="art-text">Save your preferences, checkout quicker, and manage your orders from one place.</div>
+          <div class="art-pill-list">
+            <span>Secure checkout</span>
+            <span>Order tracking</span>
+            <span>Saved details</span>
+          </div>
+        </div>
+        <div class="art-circle art-circle-1"></div>
+        <div class="art-circle art-circle-2"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/register.js"></script>
+</body>
+</html>

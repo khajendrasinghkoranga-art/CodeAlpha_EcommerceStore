@@ -297,6 +297,11 @@ input, select, textarea {
   box-shadow: 0 16px 32px rgba(0,0,0,0.16);
 }
 
+.btn-google:focus-visible {
+  outline: 3px solid rgba(92,225,230,0.8);
+  outline-offset: 3px;
+}
+
 .btn-google .btn-icon {
   width: 22px;
   height: 22px;

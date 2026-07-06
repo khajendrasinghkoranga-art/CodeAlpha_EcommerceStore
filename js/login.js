@@ -125,9 +125,8 @@
 
   if (socialGoogle) socialGoogle.addEventListener('click', (e) => {
     e.preventDefault();
-    const googleUrl = 'https://accounts.google.com/signin/v2/identifier?service=mail';
-    window.open(googleUrl, '_blank', 'noopener');
-    showToast('Opening Google sign-in');
+    window.location.href = '/auth/google';
+    showToast('Redirecting to Google sign-in');
   });
 
   const emailLoginForm = document.getElementById('email-login-form');

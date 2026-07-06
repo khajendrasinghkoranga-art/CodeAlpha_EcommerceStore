@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { initializeDatabase, createUser, getUserByEmail, db } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,12 +11,22 @@ app.use(express.json());
 // Serve static frontend files from project root
 app.use(express.static(path.join(__dirname)));
 
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/auth/google', (req, res) => {
+  const googleUrl = 'https://accounts.google.com/signin/v2/identifier?service=mail';
+  res.redirect(googleUrl);
+});
+
 // ═══════════════════════════════════════════════════════
 // DATABASE SETUP
 // ═══════════════════════════════════════════════════════
-const sqlite3 = require('sqlite3').verbose();
-const DB_PATH = path.join(__dirname, 'data.db');
-const db = new sqlite3.Database(DB_PATH);
 
 // SSE clients list
 const sseClients = [];
@@ -43,52 +54,7 @@ function broadcastProducts() {
   });
 }
 
-db.serialize(() => {
-  // Orders table (existing)
-  db.run(`CREATE TABLE IF NOT EXISTS orders (
-    id TEXT PRIMARY KEY,
-    cart TEXT,
-    customer TEXT,
-    total REAL,
-    status TEXT,
-    createdAt TEXT,
-    paidAt TEXT
-  )`);
-
-  // Users table (with admin flag)
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    email TEXT UNIQUE,
-    passwordHash TEXT,
-    isAdmin INTEGER DEFAULT 0,
-    createdAt TEXT
-  )`);
-
-  // Add isAdmin column if upgrading from older schema
-  db.run(`ALTER TABLE users ADD COLUMN isAdmin INTEGER DEFAULT 0`, (err) => {
-    // Ignore error if column already exists
-  });
-
-  // Products table (NEW)
-  db.run(`CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL,
-    price REAL NOT NULL,
-    originalPrice REAL,
-    image TEXT,
-    badge TEXT,
-    rating REAL DEFAULT 0,
-    reviews INTEGER DEFAULT 0,
-    description TEXT,
-    specs TEXT,
-    inStock INTEGER DEFAULT 1,
-    featured INTEGER DEFAULT 0,
-    createdAt TEXT,
-    updatedAt TEXT
-  )`);
-});
+initializeDatabase();
 
 // ═══════════════════════════════════════════════════════
 // SEED PRODUCTS FROM products.js (first run only)
@@ -161,6 +127,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
 // Default admin credentials (change these!)
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'khajendrasinghkoranga@gmail.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '7906323254';
+const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@example.com';
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo12345';
 
 function generateUserId() {
   return 'U-' + Math.floor(100000 + Math.random() * 900000);
@@ -187,7 +155,29 @@ function seedAdmin() {
     );
   });
 }
+
+function seedDemoUser() {
+  db.get('SELECT COUNT(*) as count FROM users WHERE email = ?', [DEMO_EMAIL.toLowerCase()], (err, row) => {
+    if (err) { console.error('Demo user check error:', err); return; }
+    if (row && row.count > 0) {
+      console.log('[DB] Demo account already exists — skipping seed.');
+      return;
+    }
+    const demoId = 'U-DEMO-001';
+    const now = new Date().toISOString();
+    const hash = bcrypt.hashSync(DEMO_PASSWORD, 10);
+    db.run(
+      'INSERT OR IGNORE INTO users (id, name, email, passwordHash, isAdmin, createdAt) VALUES (?, ?, ?, ?, 0, ?)',
+      [demoId, 'Demo User', DEMO_EMAIL.toLowerCase(), hash, now],
+      (err) => {
+        if (err) console.error('Demo user seed error:', err);
+        else console.log(`[DB] ✅ Demo account created — Email: ${DEMO_EMAIL} | Password: ${DEMO_PASSWORD}`);
+      }
+    );
+  });
+}
 seedAdmin();
+seedDemoUser();
 
 function authenticateToken(req, res, next) {
   const auth = req.headers['authorization'];
@@ -240,17 +230,16 @@ app.post('/api/register', (req, res) => {
   const createdAt = new Date().toISOString();
   const passwordHash = bcrypt.hashSync(password, 10);
 
-  const stmt = db.prepare('INSERT INTO users (id, name, email, passwordHash, isAdmin, createdAt) VALUES (?, ?, ?, ?, 0, ?)');
-  stmt.run(userId, name || '', email.toLowerCase(), passwordHash, createdAt, function (err) {
-    if (err) {
+  createUser({ id: userId, name, email, passwordHash, createdAt })
+    .then((user) => {
+      const token = jwt.sign({ id: user.id, email: user.email, name: user.name || '' }, JWT_SECRET, { expiresIn: '7d' });
+      res.json({ success: true, token, user });
+    })
+    .catch((err) => {
       if (err.message && err.message.includes('UNIQUE')) return res.status(400).json({ error: 'Email already registered' });
       console.error('User insert error', err);
       return res.status(500).json({ error: 'Could not create user' });
-    }
-    const token = jwt.sign({ id: userId, email: email.toLowerCase(), name: name || '' }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, user: { id: userId, email: email.toLowerCase(), name: name || '' } });
-  });
-  stmt.finalize();
+    });
 });
 
 // Login (regular users)
@@ -258,14 +247,15 @@ app.post('/api/login', (req, res) => {
   const { email, password } = req.body || {};
   console.log('[AUTH] login attempt:', { email: email });
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    if (!row) return res.status(400).json({ error: 'Invalid email or password' });
-    const match = bcrypt.compareSync(password, row.passwordHash);
-    if (!match) return res.status(400).json({ error: 'Invalid email or password' });
-    const token = jwt.sign({ id: row.id, email: row.email, name: row.name || '' }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, user: { id: row.id, email: row.email, name: row.name || '' } });
-  });
+  getUserByEmail(email)
+    .then((row) => {
+      if (!row) return res.status(400).json({ error: 'Invalid email or password' });
+      const match = bcrypt.compareSync(password, row.passwordHash);
+      if (!match) return res.status(400).json({ error: 'Invalid email or password' });
+      const token = jwt.sign({ id: row.id, email: row.email, name: row.name || '' }, JWT_SECRET, { expiresIn: '7d' });
+      res.json({ success: true, token, user: { id: row.id, email: row.email, name: row.name || '' } });
+    })
+    .catch(() => res.status(500).json({ error: 'DB error' }));
 });
 
 // Admin Login — only allows users with isAdmin=1
@@ -273,15 +263,16 @@ app.post('/api/admin/login', (req, res) => {
   const { email, password } = req.body || {};
   console.log('[ADMIN] login attempt:', { email: email });
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    if (!row) return res.status(401).json({ error: 'Invalid admin credentials' });
-    if (!row.isAdmin) return res.status(403).json({ error: 'Access denied. Not an admin account.' });
-    const match = bcrypt.compareSync(password, row.passwordHash);
-    if (!match) return res.status(401).json({ error: 'Invalid admin credentials' });
-    const token = jwt.sign({ id: row.id, email: row.email, name: row.name || '', isAdmin: true }, JWT_SECRET, { expiresIn: '12h' });
-    res.json({ success: true, token, user: { id: row.id, email: row.email, name: row.name || '', isAdmin: true } });
-  });
+  getUserByEmail(email)
+    .then((row) => {
+      if (!row) return res.status(401).json({ error: 'Invalid admin credentials' });
+      if (!row.isAdmin) return res.status(403).json({ error: 'Access denied. Not an admin account.' });
+      const match = bcrypt.compareSync(password, row.passwordHash);
+      if (!match) return res.status(401).json({ error: 'Invalid admin credentials' });
+      const token = jwt.sign({ id: row.id, email: row.email, name: row.name || '', isAdmin: true }, JWT_SECRET, { expiresIn: '12h' });
+      res.json({ success: true, token, user: { id: row.id, email: row.email, name: row.name || '', isAdmin: true } });
+    })
+    .catch(() => res.status(500).json({ error: 'DB error' }));
 });
 
 // Mount auth router (new file)
