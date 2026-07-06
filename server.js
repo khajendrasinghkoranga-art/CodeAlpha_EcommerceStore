@@ -17,6 +17,32 @@ const sqlite3 = require('sqlite3').verbose();
 const DB_PATH = path.join(__dirname, 'data.db');
 const db = new sqlite3.Database(DB_PATH);
 
+// SSE clients list
+const sseClients = [];
+
+function sendSseEvent(data) {
+  const payload = `data: ${JSON.stringify(data)}\n\n`;
+  console.log('[SSE] sending event', data && data.type, 'to', sseClients.length, 'clients');
+  sseClients.forEach((res) => {
+    try {
+      res.write(payload);
+      try { res.flush && res.flush(); } catch (e) { /* ignore flush errors */ }
+    } catch (e) {
+      console.error('[SSE] client write error', e && e.message);
+      // ignore individual client errors
+    }
+  });
+}
+
+function broadcastProducts() {
+  db.all('SELECT * FROM products ORDER BY featured DESC, id ASC', (err, rows) => {
+    if (err) return;
+    const products = rows.map(parseProductRow);
+    console.log('[SSE] broadcastProducts — product count', products.length);
+    sendSseEvent({ type: 'products', products, ts: Date.now() });
+  });
+}
+
 db.serialize(() => {
   // Orders table (existing)
   db.run(`CREATE TABLE IF NOT EXISTS orders (
@@ -181,18 +207,22 @@ function authenticateToken(req, res, next) {
 // Admin-only middleware — checks isAdmin flag in JWT
 function authenticateAdmin(req, res, next) {
   const auth = req.headers['authorization'];
+  console.log('[SSE] authenticateAdmin called, auth present:', !!auth);
   if (!auth) return res.status(401).json({ error: 'Missing Authorization header' });
   const parts = auth.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') return res.status(401).json({ error: 'Invalid Authorization format' });
   const token = parts[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    console.log('[SSE] authenticateAdmin payload:', payload && payload.id, 'isAdmin=', payload && payload.isAdmin);
     if (!payload.isAdmin) {
+      console.log('[SSE] authenticateAdmin failed: not admin');
       return res.status(403).json({ error: 'Admin access required' });
     }
     req.user = payload;
     next();
   } catch (err) {
+    console.log('[SSE] authenticateAdmin verify error', err && err.message);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
@@ -381,6 +411,26 @@ app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, r
   if (!req.file) return res.status(400).json({ error: 'No image file provided' });
   const url = `/assets/images/products/${req.file.filename}`;
   res.json({ success: true, url });
+  // image upload alone doesn't change DB products table; admin product update will trigger broadcast
+});
+
+// SSE endpoint for real-time updates
+app.get('/events', (req, res) => {
+  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  res.flushHeaders && res.flushHeaders();
+
+  // send a comment to establish the connection
+  res.write(': connected\n\n');
+
+  sseClients.push(res);
+  console.log('[SSE] client connected — total:', sseClients.length);
+
+  // on close remove client
+  req.on('close', () => {
+    const idx = sseClients.indexOf(res);
+    if (idx !== -1) sseClients.splice(idx, 1);
+    console.log('[SSE] client disconnected — total:', sseClients.length);
+  });
 });
 
 // GET admin stats
@@ -390,16 +440,49 @@ app.get('/api/admin/stats', authenticateAdmin, (req, res) => {
   db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
     stats.totalProducts = row ? row.count : 0;
 
-    db.get('SELECT COUNT(*) as count FROM users', (err2, row2) => {
+    db.get('SELECT COUNT(*) as count FROM users WHERE isAdmin = 0', (err2, row2) => {
       stats.totalUsers = row2 ? row2.count : 0;
 
-      db.get('SELECT COUNT(*) as count, COALESCE(SUM(total), 0) as revenue FROM orders', (err3, row3) => {
+      db.get('SELECT COUNT(*) as count FROM orders', (err3, row3) => {
         stats.totalOrders = row3 ? row3.count : 0;
-        stats.totalRevenue = row3 ? row3.revenue : 0;
 
-        res.json(stats);
+        db.get(`SELECT COALESCE(SUM(total), 0) as revenue FROM orders WHERE status = 'paid'`, (err4, row4) => {
+          stats.totalRevenue = row4 ? row4.revenue : 0;
+          res.json(stats);
+        });
       });
     });
+  });
+});
+
+// GET admin users
+app.get('/api/admin/users', authenticateAdmin, (req, res) => {
+  db.all('SELECT id, name, email, isAdmin, createdAt FROM users WHERE isAdmin = 0 ORDER BY createdAt DESC', (err, rows) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    res.json(rows.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      isAdmin: !!u.isAdmin,
+      createdAt: u.createdAt
+    })));
+  });
+});
+
+// GET admin orders
+app.get('/api/admin/orders', authenticateAdmin, (req, res) => {
+  db.all('SELECT * FROM orders ORDER BY createdAt DESC', (err, rows) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    const parsed = rows.map(r => ({
+      id: r.id,
+      cart: JSON.parse(r.cart || '[]'),
+      customer: JSON.parse(r.customer || '{}'),
+      total: r.total,
+      status: r.status,
+      createdAt: r.createdAt,
+      paidAt: r.paidAt
+    }));
+    res.json(parsed);
   });
 });
 
@@ -432,7 +515,7 @@ app.post('/api/admin/products', authenticateAdmin, (req, res) => {
     featured ? 1 : 0,
     now,
     now,
-    function (err) {
+      function (err) {
       if (err) {
         if (err.message && err.message.includes('UNIQUE')) {
           return res.status(400).json({ error: 'Product ID already exists' });
@@ -440,7 +523,9 @@ app.post('/api/admin/products', authenticateAdmin, (req, res) => {
         console.error('Product insert error:', err);
         return res.status(500).json({ error: 'Could not create product' });
       }
-      res.json({ success: true, id: productId });
+        res.json({ success: true, id: productId });
+        // broadcast updated products to SSE clients
+        try { broadcastProducts(); } catch (e) {}
     }
   );
   stmt.finalize();
@@ -448,6 +533,7 @@ app.post('/api/admin/products', authenticateAdmin, (req, res) => {
 
 // PUT update product
 app.put('/api/admin/products/:id', authenticateAdmin, (req, res) => {
+  console.log('[SSE] PUT /api/admin/products/:id handler entered for', req.params.id);
   const productId = req.params.id;
   const { name, category, price, originalPrice, image, badge, rating, reviews, description, specs, inStock, featured } = req.body || {};
 
@@ -484,6 +570,8 @@ app.put('/api/admin/products/:id', authenticateAdmin, (req, res) => {
         return res.status(404).json({ error: 'Product not found' });
       }
       res.json({ success: true, id: productId });
+      // broadcast updated products to SSE clients
+      try { console.log('[SSE] calling broadcastProducts from update handler'); broadcastProducts(); console.log('[SSE] broadcastProducts called'); } catch (e) { console.error('[SSE] broadcastProducts error', e); }
     }
   );
 });
@@ -501,6 +589,8 @@ app.delete('/api/admin/products/:id', authenticateAdmin, (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     res.json({ success: true, id: productId });
+    // broadcast updated products to SSE clients
+    try { broadcastProducts(); } catch (e) {}
   });
 });
 
@@ -513,24 +603,60 @@ app.post('/api/checkout', authenticateToken, (req, res) => {
   if (!cart || !Array.isArray(cart) || cart.length === 0) {
     return res.status(400).json({ error: 'Cart is empty' });
   }
-
   const orderId = 'N-' + Math.floor(100000 + Math.random() * 900000);
-  const total = cart.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
   const createdAt = new Date().toISOString();
 
-  // Use authenticated user as customer if not provided
-  const cust = customer && Object.keys(customer).length ? customer : { id: req.user.id, email: req.user.email, name: req.user.name };
+  // Authoritative pricing: lookup current prices from DB for each cart item
+  const resolvedCart = [];
+  let total = 0;
 
-  const stmt = db.prepare(`INSERT INTO orders (id, cart, customer, total, status, createdAt) VALUES (?, ?, ?, ?, ?, ?)`);
-  stmt.run(orderId, JSON.stringify(cart), JSON.stringify(cust || {}), total, 'pending', createdAt, function (err) {
-    if (err) {
-      console.error('DB insert error', err);
-      return res.status(500).json({ error: 'Could not create order' });
+  // We'll process items serially using a simple promise chain to query DB
+  (async () => {
+    for (const item of cart) {
+      const pid = item.id;
+      const qty = Number(item.qty) || 1;
+      try {
+        const row = await new Promise((resolve, reject) => {
+          db.get('SELECT id, name, price, image FROM products WHERE id = ?', [pid], (err, r) => {
+            if (err) return reject(err);
+            resolve(r);
+          });
+        });
+
+        const unitPrice = row ? Number(row.price) || 0 : 0;
+        const name = (item.name && item.name.length) ? item.name : (row ? row.name : 'Unknown');
+        const image = (item.image && item.image.length) ? item.image : (row ? row.image : null);
+
+        const resolved = {
+          id: pid,
+          name,
+          image: image || null,
+          qty,
+          price: unitPrice
+        };
+        resolvedCart.push(resolved);
+        total += unitPrice * qty;
+      } catch (err) {
+        console.error('Error resolving product for checkout:', pid, err);
+        // fallback: include item with price 0 so order can still be attempted
+        resolvedCart.push({ id: pid, name: item.name || 'Unknown', image: item.image || null, qty, price: 0 });
+      }
     }
 
-    res.json({ success: true, orderId });
-  });
-  stmt.finalize();
+    // Use authenticated user as customer if not provided
+    const cust = customer && Object.keys(customer).length ? customer : { id: req.user.id, email: req.user.email, name: req.user.name };
+
+    const stmt = db.prepare(`INSERT INTO orders (id, cart, customer, total, status, createdAt) VALUES (?, ?, ?, ?, ?, ?)`);
+    stmt.run(orderId, JSON.stringify(resolvedCart), JSON.stringify(cust || {}), total, 'pending', createdAt, function (err) {
+      if (err) {
+        console.error('DB insert error', err);
+        return res.status(500).json({ error: 'Could not create order' });
+      }
+
+      res.json({ success: true, orderId, total, cart: resolvedCart });
+    });
+    stmt.finalize();
+  })();
 });
 
 app.get('/api/orders', (req, res) => {

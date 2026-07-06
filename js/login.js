@@ -3,6 +3,10 @@
   const $ = sel => document.querySelector(sel);
 
   const socialGoogle = $('#social-google');
+  const emailInput = $('#email-input');
+  const passwordInput = $('#password-input');
+  const emailLoginBtn = $('#email-login-btn');
+  const loginError = $('#login-error');
   const otpPhone = $('#otp-phone');
   const sendOtpBtn = $('#send-otp-btn');
   const otpStep = $('#otp-step');
@@ -39,6 +43,85 @@
     else localStorage.removeItem('nova_user');
   }
 
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function setFormError(message) {
+    if (loginError) {
+      loginError.textContent = message;
+    }
+  }
+
+  function clearFormError() {
+    if (loginError) {
+      loginError.textContent = '';
+    }
+  }
+
+  async function handleEmailLogin(event) {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    clearFormError();
+    if (!emailInput || !passwordInput || !emailLoginBtn) return;
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email) {
+      setFormError('Email is required.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setFormError('Enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setFormError('Password is required.');
+      return;
+    }
+    if (password.length < 6) {
+      setFormError('Password must be at least 6 characters.');
+      return;
+    }
+
+    const originalText = emailLoginBtn.textContent;
+    emailLoginBtn.disabled = true;
+    emailLoginBtn.textContent = 'Signing in...';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error || 'Invalid login credentials.');
+        showToast(data.error || 'Sign in failed');
+        return;
+      }
+      setAuthToken(data.token);
+      setAuthUser(data.user);
+      showToast('Logged in successfully');
+      window.location.href = '/';
+    } catch (err) {
+      console.error(err);
+      const message = err?.message || 'Login failed';
+      setFormError(message);
+      showToast(message);
+    } finally {
+      emailLoginBtn.disabled = false;
+      emailLoginBtn.textContent = originalText;
+    }
+  }
+
+  if (emailInput) {
+    emailInput.addEventListener('input', clearFormError);
+  }
+  if (passwordInput) {
+    passwordInput.addEventListener('input', clearFormError);
+  }
+
 
   if (socialGoogle) socialGoogle.addEventListener('click', (e) => {
     e.preventDefault();
@@ -47,6 +130,10 @@
     showToast('Opening Google sign-in');
   });
 
+  const emailLoginForm = document.getElementById('email-login-form');
+  if (emailLoginForm) {
+    emailLoginForm.addEventListener('submit', handleEmailLogin);
+  }
 
   let pendingPhone = null;
   if (sendOtpBtn) sendOtpBtn.addEventListener('click', async (e) => {

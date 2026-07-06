@@ -27,6 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('nova_wishlist', JSON.stringify(Array.from(state.wishlist)));
   }
 
+  function formatINR(amount, minimumFractionDigits = 0) {
+    const num = Number(amount) || 0;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits,
+      maximumFractionDigits: minimumFractionDigits
+    }).format(num);
+  }
+
   // ── DOM References ──
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
@@ -34,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const navbar = $('#navbar');
   const hamburger = $('#hamburger');
   const navMenu = $('#nav-menu');
+  const navHome = $('#nav-home');
+  const navLogo = $('#nav-logo');
   const cartBtn = $('#cart-btn');
   const cartOverlay = $('#cart-overlay');
   const cartSidebar = $('#cart-sidebar');
@@ -48,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchBtn = $('#search-btn');
   const searchOverlay = $('#search-overlay');
   const searchInput = $('#search-input');
+  const searchSubmitBtn = $('#search-submit-btn');
+  const searchSuggestions = $('.search-suggestions');
+  const productsStatus = $('#products-status');
   const backToTop = $('#back-to-top');
   const newsletterForm = $('#newsletter-form');
   const toastContainer = $('#toast-container');
@@ -236,6 +251,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cartBtn) cartBtn.addEventListener('click', openCart);
   if (cartClose) cartClose.addEventListener('click', closeCart);
   if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+  if (navHome) {
+    navHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.reload();
+    });
+  }
+  if (navLogo) {
+    navLogo.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.reload();
+    });
+  }
 
   function addToCart(productId) {
     let name = '';
@@ -306,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cartCount) cartCount.textContent = totalItems;
     if (cartItemCount) cartItemCount.textContent = totalItems;
-    if (cartSubtotal) cartSubtotal.textContent = `₹${(subtotal * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if (cartSubtotal) cartSubtotal.textContent = formatINR(subtotal, 2);
 
     if (!cartItems) return;
 
@@ -325,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${item.image}" alt="${item.name}" class="cart-item-image">
         <div class="cart-item-details">
           <div class="cart-item-name">${item.name}</div>
-          <div class="cart-item-price">₹${((item.price * item.qty) * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+          <div class="cart-item-price">${formatINR(item.price * item.qty, 2)}</div>
           <div class="cart-item-qty">
             <button class="qty-btn" onclick="window.novaStore.updateQty('${item.id}', -1)">−</button>
             <span class="qty-value">${item.qty}</span>
@@ -335,6 +362,23 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="cart-item-remove" onclick="window.novaStore.removeItem('${item.id}')">✕</button>
       </div>
     `).join('');
+  }
+
+  // Update cart item prices from SERVER_PRODUCTS (keep qty & id/name)
+  function updateCartPricesFromServer() {
+    if (!Array.isArray(SERVER_PRODUCTS) || SERVER_PRODUCTS.length === 0) return;
+    let changed = false;
+    state.cart.forEach(item => {
+      const prod = SERVER_PRODUCTS.find(p => p.id === item.id);
+      if (prod && prod.price !== item.price) {
+        item.price = prod.price;
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveCartToLocalStorage();
+      renderCart();
+    }
   }
 
   // Expose cart methods globally for onclick handlers and external pages
@@ -354,16 +398,86 @@ document.addEventListener('DOMContentLoaded', () => {
   // ═══════════════════════════════════════════════════
   function openSearch() {
     state.isSearchOpen = true;
-    searchOverlay.classList.add('active');
+    if (searchOverlay) searchOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
-    setTimeout(() => searchInput.focus(), 200);
+    if (searchInput) {
+      searchInput.value = state.currentSearch || '';
+      setTimeout(() => searchInput.focus(), 200);
+    }
   }
 
-  function closeSearch() {
+  function closeSearch(resetSearch = false) {
     state.isSearchOpen = false;
-    searchOverlay.classList.remove('active');
+    if (searchOverlay) searchOverlay.classList.remove('active');
     document.body.style.overflow = '';
-    searchInput.value = '';
+    if (resetSearch && searchInput) {
+      searchInput.value = '';
+      state.currentSearch = '';
+      applyFiltersAndSort();
+      renderSearchSuggestions('');
+    }
+  }
+
+  function getSearchProducts() {
+    const PRODUCTS_SOURCE = (Array.isArray(SERVER_PRODUCTS) && SERVER_PRODUCTS.length) ? SERVER_PRODUCTS : (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []);
+    return Array.isArray(PRODUCTS_SOURCE) ? PRODUCTS_SOURCE : [];
+  }
+
+  function renderSearchSuggestions(query) {
+    if (!searchSuggestions) return;
+    const normalized = String(query || '').trim().toLowerCase();
+    const allProducts = getSearchProducts();
+    let matched = [];
+
+    if (normalized.length > 0) {
+      matched = allProducts.filter(p =>
+        p.name.toLowerCase().includes(normalized) ||
+        p.category.toLowerCase().includes(normalized) ||
+        (p.description && p.description.toLowerCase().includes(normalized))
+      ).slice(0, 6);
+    }
+
+    if (!matched.length) {
+      matched = [
+        { text: 'Wireless Headphones', sub: 'Popular search' },
+        { text: 'Smartwatch', sub: 'Popular search' },
+        { text: 'Mechanical Keyboard', sub: 'Popular search' },
+        { text: 'Bluetooth Speaker', sub: 'Popular search' },
+      ];
+    }
+
+    searchSuggestions.innerHTML = `
+      <div class="search-suggestion-title">${normalized.length > 0 ? 'Related searches' : 'Popular searches'}</div>
+      ${matched.map(item => {
+        const title = item.text || item.name || '';
+        const subtitle = item.sub || item.category || '';
+        return `
+          <div class="search-suggestion-item">
+            <span class="search-suggestion-icon">🔎</span>
+            <div>
+              <div class="search-suggestion-text">${title}</div>
+              <div class="search-suggestion-sub">${subtitle}</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  function handleSearchSubmit() {
+    const query = state.currentSearch.trim();
+    if (!query.length) {
+      showToast('Please enter a search keyword.', 'warning');
+      return;
+    }
+    applyFiltersAndSort();
+    closeSearch();
+    const productsSection = $('#products');
+    if (productsSection) {
+      const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 72;
+      const top = productsSection.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   }
 
   if (searchBtn) searchBtn.addEventListener('click', openSearch);
@@ -533,6 +647,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const productsGrid = $('#products-grid');
     if (!productsGrid) return;
 
+    if (productsStatus) {
+      if (state.currentSearch.trim().length >= 2) {
+        productsStatus.innerHTML = productsToRender.length === 0
+          ? `<div class="products-status-message">No products matched "<strong>${state.currentSearch}</strong>". Try a different search term.</div>`
+          : `<div class="products-status-message">Showing ${productsToRender.length} results for "<strong>${state.currentSearch}</strong>".</div>`;
+      } else if (state.currentCategory !== 'All') {
+        productsStatus.innerHTML = productsToRender.length === 0
+          ? `<div class="products-status-message">No products found in <strong>${state.currentCategory}</strong>. Try another category.</div>`
+          : `<div class="products-status-message">Showing ${productsToRender.length} products in <strong>${state.currentCategory}</strong>.</div>`;
+      } else {
+        productsStatus.innerHTML = '';
+      }
+    }
+
     if (productsToRender.length === 0) {
       productsGrid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-4xl) 0;">
@@ -551,9 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (product.badge === 'new') badgeHtml = '<span class="product-badge product-badge-new">New</span>';
       else if (product.badge === 'sale') badgeHtml = '<span class="product-badge product-badge-sale">Sale</span>';
 
-      let priceHtml = `<span class="product-price-current">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>`;
+      let priceHtml = `<span class="product-price-current">${formatINR(product.price, 0)}</span>`;
       if (product.originalPrice) {
-        priceHtml += `<span class="product-price-original">₹${(product.originalPrice * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>`;
+        priceHtml += `<span class="product-price-original">${formatINR(product.originalPrice, 0)}</span>`;
       }
 
       let starsHtml = '★'.repeat(Math.floor(product.rating)) + '☆'.repeat(5 - Math.floor(product.rating));
@@ -628,8 +756,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="deal-card-category">${product.category}</div>
           <h3 class="deal-card-title">${product.name}</h3>
-          <div class="deal-card-price">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
-          ${product.originalPrice ? `<div class="deal-card-original">₹${(product.originalPrice * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>` : ''}
+          <div class="deal-card-price">${formatINR(product.price, 0)}</div>
+          ${product.originalPrice ? `<div class="deal-card-original">${formatINR(product.originalPrice, 0)}</div>` : ''}
           ${product.badge ? `<span class="deal-card-badge">${badgeLabel}</span>` : ''}
           <div class="deal-card-footer">
             <button class="product-add-btn add-to-cart" aria-label="Add to cart" data-product-id="${product.id}">+</button>
@@ -722,9 +850,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!product) return;
 
     let starsHtml = '★'.repeat(Math.floor(product.rating)) + '☆'.repeat(5 - Math.floor(product.rating));
-let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>`;
+let priceHtml = `<span class="quickview-price">${formatINR(product.price, 0)}</span>`;
       if (product.originalPrice) {
-        priceHtml += `<span class="quickview-price-original">₹${(product.originalPrice * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>`;
+        priceHtml += `<span class="quickview-price-original">${formatINR(product.originalPrice, 0)}</span>`;
     }
 
     let specsHtml = '';
@@ -844,12 +972,12 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
           <div class="checkout-summary-name">${item.name}</div>
           <div class="checkout-summary-qty">Qty: ${item.qty}</div>
         </div>
-        <div class="checkout-summary-price">₹${((item.price * item.qty) * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+        <div class="checkout-summary-price">${formatINR(item.price * item.qty, 2)}</div>
       </div>
     `).join('');
     
     const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const totalStr = `₹${(subtotal * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    const totalStr = formatINR(subtotal, 2);
     checkoutSubtotalVal.textContent = totalStr;
     checkoutTotalVal.textContent = totalStr;
     
@@ -955,19 +1083,19 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
     }
 
     // 3. Apply sorting
-    if (state.currentSort === 'price-low') {
-      result.sort((a, b) => a.price - b.price);
-    } else if (state.currentSort === 'price-high') {
-      result.sort((a, b) => b.price - a.price);
-    } else if (state.currentSort === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (state.currentSort === 'popularity') {
-      result.sort((a, b) => b.reviews - a.reviews);
-    } else {
-      // Default: featured first, then others
-      result = result.filter(p => p.featured).concat(result.filter(p => !p.featured));
-      result = [...new Set(result)];
-    }
+    const sortComparators = {
+      'price-low': (a, b) => a.price - b.price || a.name.localeCompare(b.name),
+      'price-high': (a, b) => b.price - a.price || a.name.localeCompare(b.name),
+      'rating': (a, b) => b.rating - a.rating || a.name.localeCompare(b.name),
+      'popularity': (a, b) => b.reviews - a.reviews || a.name.localeCompare(b.name),
+      'featured': (a, b) => {
+        const featuredDiff = (b.featured === a.featured) ? 0 : (b.featured ? 1 : -1);
+        return featuredDiff || a.name.localeCompare(b.name);
+      },
+    };
+
+    const comparator = sortComparators[state.currentSort] || sortComparators.featured;
+    result.sort(comparator);
 
     renderProducts(result);
   }
@@ -987,12 +1115,22 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
     }
 
     applyFiltersAndSort();
+    // Ensure cart prices reflect server-authoritative product prices on initial load
+    updateCartPricesFromServer();
+
+    // Start SSE to receive real-time product updates from server
+    startSSE();
 
     // Bind category cards click (in categories section)
     $$('.category-card').forEach(card => {
       card.addEventListener('click', () => {
         const catName = card.querySelector('.category-name').textContent;
         state.currentCategory = catName;
+
+        if (state.currentSearch) {
+          state.currentSearch = '';
+          if (searchInput) searchInput.value = '';
+        }
 
         // Update control filter tabs active state
         $$('.filter-tab').forEach(t => {
@@ -1019,6 +1157,12 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
         $$('.filter-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         state.currentCategory = tab.dataset.category;
+
+        if (state.currentSearch) {
+          state.currentSearch = '';
+          if (searchInput) searchInput.value = '';
+        }
+
         applyFiltersAndSort();
         showToast(`Filter: ${state.currentCategory}`, 'info');
       });
@@ -1037,24 +1181,124 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         state.currentSearch = e.target.value;
+        renderSearchSuggestions(state.currentSearch);
         applyFiltersAndSort();
+      });
 
-        // Auto scroll to products
-        if (state.currentSearch.trim().length >= 2) {
-          if (state.isSearchOpen) closeSearch();
-          const productsSection = $('#products');
-          if (productsSection) {
-            const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 72;
-            const top = productsSection.getBoundingClientRect().top + window.scrollY - offset;
-            window.scrollTo({ top, behavior: 'smooth' });
-          }
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleSearchSubmit();
+        }
+      });
+    }
+
+    if (searchSubmitBtn) {
+      searchSubmitBtn.addEventListener('click', handleSearchSubmit);
+    }
+
+    if (searchSuggestions) {
+      searchSuggestions.addEventListener('click', (e) => {
+        const item = e.target.closest('.search-suggestion-item');
+        if (!item) return;
+        const textEl = item.querySelector('.search-suggestion-text');
+        const txt = textEl ? textEl.textContent.trim() : '';
+        if (!txt || !searchInput) return;
+        searchInput.value = txt;
+        state.currentSearch = txt;
+        renderSearchSuggestions(txt);
+        applyFiltersAndSort();
+        closeSearch();
+
+        const productsSection = $('#products');
+        if (productsSection) {
+          const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 72;
+          const top = productsSection.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top, behavior: 'smooth' });
         }
       });
     }
   }
 
+  // Poll backend for product updates and refresh UI when data changes
+  let _productPollIntervalId = null;
+  function startProductPolling(intervalMs = 15000) {
+    if (_productPollIntervalId) return; // already running
+    _productPollIntervalId = setInterval(async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (!res.ok) return;
+        const data = await res.json();
+        const newProducts = Array.isArray(data) ? data : [];
+        // shallow compare via JSON; acceptable for small product sets
+        if (!SERVER_PRODUCTS) {
+          SERVER_PRODUCTS = newProducts;
+        } else if (JSON.stringify(newProducts) !== JSON.stringify(SERVER_PRODUCTS)) {
+          SERVER_PRODUCTS = newProducts;
+          applyFiltersAndSort();
+          updateCartPricesFromServer();
+          showToast('Prices updated', 'info');
+          console.log('[Products Poll] Updated products from server');
+        }
+      } catch (e) {
+        // ignore polling errors silently
+      }
+    }, intervalMs);
+  }
+
+  // SSE real-time updates (preferred)
+  let _sse = null;
+  function startSSE() {
+    if (typeof EventSource === 'undefined') return; // not supported
+    if (_sse) return;
+    try {
+      _sse = new EventSource('/events');
+      _sse.onmessage = (ev) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload && payload.type === 'products' && Array.isArray(payload.products)) {
+            SERVER_PRODUCTS = payload.products;
+            applyFiltersAndSort();
+            updateCartPricesFromServer();
+            showToast('Prices updated', 'info');
+            console.log('[SSE] Products updated from server');
+          }
+        } catch (e) { console.error('SSE parse error', e); }
+      };
+      _sse.onerror = (e) => {
+        console.warn('SSE error, will attempt reconnect');
+        _sse.close();
+        _sse = null;
+        setTimeout(startSSE, 3000);
+      };
+    } catch (e) {
+      console.warn('SSE start failed', e);
+    }
+  }
+
   // Kick off product fetch and init
   fetchAndInitProducts();
+
+  // Listen for product change notifications from other tabs (admin)
+  window.addEventListener('storage', async (e) => {
+    if (e.key !== 'nova_products_updated') return;
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) return;
+      const data = await res.json();
+      const newProducts = Array.isArray(data) ? data : [];
+      if (JSON.stringify(newProducts) !== JSON.stringify(SERVER_PRODUCTS)) {
+        SERVER_PRODUCTS = newProducts;
+        applyFiltersAndSort();
+        updateCartPricesFromServer();
+        showToast('Prices updated', 'info');
+        console.log('[Products Storage] Updated products from admin tab');
+      }
+    } catch (err) {
+      // ignore
+    }
+  });
+  
 
   // Bind popular suggestion items in search modal
   $$('.search-suggestion-item').forEach(item => {

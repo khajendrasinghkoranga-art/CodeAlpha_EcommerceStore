@@ -325,6 +325,13 @@ input, select, textarea {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
+.login-error {
+  min-height: 1.4rem;
+  color: #ff7b7b;
+  font-size: 0.94rem;
+  margin-top: 4px;
+}
+
 .auth-form input:focus {
   border-color: rgba(124,92,252,0.55);
   box-shadow: 0 0 0 4px rgba(124,92,252,0.08);
@@ -2158,6 +2165,26 @@ input, select, textarea {
   font-size: 0.95rem;
 }
 
+.products-status {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(124, 92, 252, 0.08);
+  border: 1px solid rgba(124, 92, 252, 0.12);
+  color: var(--clr-text-primary);
+  font-size: 0.95rem;
+}
+
+.products-status-message {
+  display: inline-flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.products-status-message strong {
+  color: var(--clr-text-primary);
+}
+
 .wishlist-toolbar {
   display: flex;
   align-items: center;
@@ -2355,8 +2382,15 @@ input, select, textarea {
 }
 
 .search-suggestion-text {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--clr-text-secondary);
+  font-weight: 600;
+}
+
+.search-suggestion-sub {
+  font-size: 0.75rem;
+  color: var(--clr-text-muted);
+  margin-top: 0.25rem;
 }
 
 /* ===================================================

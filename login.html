@@ -17,7 +17,7 @@
         <p>Secure access for fast checkout, order history, and account control in one polished experience.</p>
 
         <div class="socials">
-          <button id="social-google" class="btn btn-google">
+          <button id="social-google" type="button" class="btn btn-google">
             <span class="btn-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" aria-hidden="true"><path fill="#4285F4" d="M533.5 278.4c0-17.7-1.6-35-4.9-51.8H272v98h146.9c-6.3 34.1-25.4 62.9-54.2 82.3v68.2h87.6c51.3-47.3 80.2-116.8 80.2-196.7z"/><path fill="#34A853" d="M272 544.3c73.4 0 135-24.3 180-66.3l-87.6-68.2c-24.3 16.3-55.3 25.9-92.4 25.9-70.9 0-131-47.9-152.4-112.2H30.9v70.6C75.8 486 167.5 544.3 272 544.3z"/><path fill="#FBBC05" d="M119.6 323.5c-11.4-34.1-11.4-70.7 0-104.8V148.1H30.9c-34.6 69.1-34.6 151.2 0 220.3l88.7-45z"/><path fill="#EA4335" d="M272 107.5c39.8 0 75.6 13.7 103.8 40.6l77.9-77.9C403.4 24.3 341.8 0 272 0 167.5 0 75.8 58.3 30.9 148.1l88.7 70.6C141 155.5 201.1 107.5 272 107.5z"/></svg>
             </span>
@@ -25,15 +25,26 @@
           </button>
         </div>
 
+        <div class="auth-form">
+          <form id="email-login-form">
+            <label class="field-label" for="email-input">Email address</label>
+            <input id="email-input" type="email" placeholder="you@example.com" autocomplete="email">
+            <label class="field-label" for="password-input">Password</label>
+            <input id="password-input" type="password" placeholder="Password" autocomplete="current-password">
+            <button id="email-login-btn" type="submit" class="btn btn-primary">Sign in with email</button>
+            <div id="login-error" class="login-error" aria-live="polite"></div>
+          </form>
+        </div>
+
         <div class="phone-login">
           <label class="field-label">Phone login (test-mode)</label>
           <div class="phone-row">
             <input id="otp-phone" placeholder="+91 98765 43210">
-            <button id="send-otp-btn" class="btn btn-secondary">Send OTP</button>
+            <button id="send-otp-btn" type="button" class="btn btn-secondary">Send OTP</button>
           </div>
           <div id="otp-step" class="otp-step" aria-hidden="true">
             <input id="otp-code" placeholder="Enter verification code">
-            <button id="verify-otp-btn" class="btn btn-secondary">Verify OTP</button>
+            <button id="verify-otp-btn" type="button" class="btn btn-secondary">Verify OTP</button>
           </div>
         </div>
 

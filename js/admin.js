@@ -109,6 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── State ──
   let allProducts = [];
+  let allUsers = [];
+  let allOrders = [];
+  let currentAdminView = 'products';
+  let selectedUser = null;
   let editingProductId = null;
   let deletingProductId = null;
   let deletingProductName = '';
@@ -121,11 +125,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const statUsersVal     = $('#stat-users-value');
   const statOrdersVal    = $('#stat-orders-value');
   const statRevenueVal   = $('#stat-revenue-value');
-  const productsTbody    = $('#products-tbody');
+  const adminViewTabs    = $('#admin-view-tabs');
+  const adminViewTitle   = $('#admin-view-title');
+  const adminTableHead   = $('#admin-table-head');
+  const adminTableBody   = $('#admin-table-body');
   const tableEmpty       = $('#table-empty');
+  const tableEmptyText   = $('#table-empty-text');
   const productsTable    = $('#products-table');
   const adminSearch      = $('#admin-search');
   const btnAddProduct    = $('#btn-add-product');
+  const userDetailPanel  = $('#user-detail-panel');
+  const userDetailTitle  = $('#user-detail-title');
+  const userDetailMeta   = $('#user-detail-meta');
+  const userOrdersBody   = $('#user-orders-body');
+  const userOrdersEmpty  = $('#user-orders-empty');
+  const btnCloseUserDetail = $('#btn-close-user-detail');
 
   // Product modal
   const productModalOverlay = $('#product-modal-overlay');
@@ -213,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       animateCounter(statProductsVal, data.totalProducts || 0);
       animateCounter(statUsersVal, data.totalUsers || 0);
       animateCounter(statOrdersVal, data.totalOrders || 0);
-      statRevenueVal.textContent = `$${(data.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+      statRevenueVal.textContent = formatINR(data.totalRevenue || 0);
     } catch (err) {
       console.error('Stats error:', err);
     }
@@ -236,6 +250,229 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(step);
   }
 
+  // Currency formatting for Indian Rupee
+  function formatINR(amount) {
+    try {
+      const num = Number(amount) || 0;
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num);
+    } catch (e) {
+      return '₹' + (amount || 0);
+    }
+  }
+
+  function updateTableHeader(view) {
+    if (!adminTableHead) return;
+
+    if (view === 'users') {
+      adminTableHead.innerHTML = `
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      `;
+    } else if (view === 'orders') {
+      adminTableHead.innerHTML = `
+        <tr>
+          <th>Order ID</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Customer</th>
+          <th>Items</th>
+        </tr>
+      `;
+    } else {
+      adminTableHead.innerHTML = `
+        <tr>
+          <th class="th-image">Image</th>
+          <th class="th-name">Name</th>
+          <th class="th-category">Category</th>
+          <th class="th-price">Price</th>
+          <th class="th-badge">Badge</th>
+          <th class="th-stock">Stock</th>
+          <th class="th-featured">Featured</th>
+          <th class="th-actions">Actions</th>
+        </tr>
+      `;
+    }
+  }
+
+  function setAdminView(view) {
+    currentAdminView = view;
+    if (adminViewTabs) {
+      adminViewTabs.querySelectorAll('.admin-view-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.view === view);
+      });
+    }
+    if (adminViewTitle) {
+      adminViewTitle.textContent = view === 'users' ? 'User Management' : view === 'orders' ? 'Order Management' : 'Product Management';
+    }
+    if (adminSearch) {
+      adminSearch.value = '';
+      adminSearch.placeholder = view === 'users' ? 'Search users...' : view === 'orders' ? 'Search orders...' : 'Search products...';
+    }
+    if (btnAddProduct) {
+      btnAddProduct.style.display = view === 'products' ? '' : 'none';
+    }
+    if (userDetailPanel) {
+      userDetailPanel.classList.add('hidden');
+    }
+    updateTableHeader(view);
+    refreshAdminTable();
+  }
+
+  function refreshAdminTable() {
+    if (!productsTable || !adminTableBody || !tableEmpty || !tableEmptyText) return;
+    if (currentAdminView === 'users') {
+      renderUsersTable(allUsers);
+    } else if (currentAdminView === 'orders') {
+      renderOrdersTable(allOrders);
+    } else {
+      renderProductsTable(allProducts);
+    }
+  }
+
+  function renderUsersTable(users) {
+    if (!users.length) {
+      productsTable.style.display = 'none';
+      tableEmpty.style.display = 'block';
+      tableEmptyText.textContent = 'No users found';
+      return;
+    }
+
+    productsTable.style.display = '';
+    tableEmpty.style.display = 'none';
+
+    adminTableBody.innerHTML = users.map(user => `
+      <tr data-id="${user.id}">
+        <td>${user.name || '–'}</td>
+        <td>${user.email}</td>
+        <td>${user.isAdmin ? 'Admin' : 'Customer'}</td>
+        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+        <td>
+          <button class="btn-view-user" data-id="${user.id}" data-email="${user.email}" data-name="${user.name}">View Purchases</button>
+        </td>
+      </tr>
+    `).join('');
+
+    adminTableBody.querySelectorAll('.btn-view-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showUserPurchaseHistory({
+          id: btn.dataset.id,
+          email: btn.dataset.email,
+          name: btn.dataset.name
+        });
+      });
+    });
+  }
+
+  function renderOrdersTable(orders) {
+    if (!orders.length) {
+      productsTable.style.display = 'none';
+      tableEmpty.style.display = 'block';
+      tableEmptyText.textContent = 'No orders found';
+      return;
+    }
+
+    productsTable.style.display = '';
+    tableEmpty.style.display = 'none';
+
+    adminTableBody.innerHTML = orders.map(order => {
+      const customerName = order.customer?.name || order.customer?.email || 'Guest';
+      const itemCount = Array.isArray(order.cart) ? order.cart.reduce((sum, item) => sum + (item.qty || 1), 0) : 0;
+      return `
+        <tr data-id="${order.id}">
+          <td>${order.id}</td>
+          <td>${new Date(order.createdAt).toLocaleString()}</td>
+          <td>${order.status}</td>
+          <td>${formatINR(order.total)}</td>
+          <td>${customerName}</td>
+          <td>${itemCount}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function showUserPurchaseHistory(user) {
+    selectedUser = user;
+    if (userDetailPanel) userDetailPanel.classList.remove('hidden');
+    if (userDetailTitle) userDetailTitle.textContent = `${user.name || 'User'} Purchase History`;
+    if (userDetailMeta) userDetailMeta.textContent = `Email: ${user.email}`;
+
+    const orders = allOrders.filter(order => {
+      const customerEmail = order.customer?.email?.toLowerCase?.();
+      const customerId = order.customer?.id;
+      return customerEmail === user.email.toLowerCase() || customerId === user.id;
+    });
+
+    if (!orders.length) {
+      if (userOrdersBody) userOrdersBody.innerHTML = '';
+      if (userOrdersEmpty) userOrdersEmpty.style.display = 'block';
+      return;
+    }
+
+    if (userOrdersEmpty) userOrdersEmpty.style.display = 'none';
+    if (userOrdersBody) {
+      userOrdersBody.innerHTML = orders.map(order => {
+        const items = Array.isArray(order.cart) ? order.cart.map(item => `${item.qty}× ${item.name}`).join(', ') : '–';
+        return `
+          <tr>
+            <td>${order.id}</td>
+            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+            <td>${order.status}</td>
+            <td>${formatINR(order.total)}</td>
+            <td>${items}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  if (btnCloseUserDetail) {
+    btnCloseUserDetail.addEventListener('click', () => {
+      if (userDetailPanel) userDetailPanel.classList.add('hidden');
+      selectedUser = null;
+    });
+  }
+
+  if (adminViewTabs) {
+    adminViewTabs.querySelectorAll('.admin-view-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        setAdminView(tab.dataset.view);
+      });
+    });
+  }
+
+  async function fetchUsers() {
+    try {
+      const res = await fetch('/api/admin/users', { headers: authHeaders() });
+      if (!res.ok) throw new Error('Failed to load users');
+      allUsers = await res.json();
+      if (currentAdminView === 'users') refreshAdminTable();
+    } catch (err) {
+      console.error('Users fetch error:', err);
+    }
+  }
+
+  async function fetchOrders() {
+    try {
+      const res = await fetch('/api/admin/orders', { headers: authHeaders() });
+      if (!res.ok) throw new Error('Failed to load orders');
+      allOrders = await res.json();
+      if (currentAdminView === 'orders') refreshAdminTable();
+    } catch (err) {
+      console.error('Orders fetch error:', err);
+    }
+  }
+
   // ═══════════════════════════════════════════════════
   // FETCH & RENDER PRODUCTS
   // ═══════════════════════════════════════════════════
@@ -247,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderProductsTable(allProducts);
     } catch (err) {
       console.error('Products fetch error:', err);
-      showToast('Failed to load products', 'error');
     }
   }
 
@@ -255,13 +491,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!products.length) {
       productsTable.style.display = 'none';
       tableEmpty.style.display = 'block';
+      tableEmptyText.textContent = 'No products found';
       return;
     }
 
     productsTable.style.display = '';
     tableEmpty.style.display = 'none';
 
-    productsTbody.innerHTML = products.map(p => {
+    adminTableBody.innerHTML = products.map(p => {
       const badgeHtml = p.badge
         ? `<span class="table-badge table-badge-${p.badge}">${p.badge.toUpperCase()}</span>`
         : `<span class="table-badge-none">—</span>`;
@@ -273,8 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const featuredHtml = p.featured ? '⭐' : '<span style="opacity:0.2">☆</span>';
 
       const priceHtml = p.originalPrice
-        ? `$${p.price}<span class="table-original-price">$${p.originalPrice}</span>`
-        : `$${p.price}`;
+        ? `${formatINR(p.price)}<span class="table-original-price">${formatINR(p.originalPrice)}</span>`
+        : `${formatINR(p.price)}`;
 
       return `
         <tr data-id="${p.id}">
@@ -296,11 +533,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
 
     // Attach action events
-    productsTbody.querySelectorAll('.btn-edit').forEach(btn => {
+    adminTableBody.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => openEditModal(btn.dataset.id));
     });
 
-    productsTbody.querySelectorAll('.btn-del').forEach(btn => {
+    adminTableBody.querySelectorAll('.btn-del').forEach(btn => {
       btn.addEventListener('click', () => openDeleteModal(btn.dataset.id, btn.dataset.name));
     });
   }
@@ -312,15 +549,30 @@ document.addEventListener('DOMContentLoaded', () => {
     adminSearch.addEventListener('input', () => {
       const q = adminSearch.value.toLowerCase().trim();
       if (!q) {
-        renderProductsTable(allProducts);
+        refreshAdminTable();
         return;
       }
-      const filtered = allProducts.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.description && p.description.toLowerCase().includes(q))
-      );
-      renderProductsTable(filtered);
+      if (currentAdminView === 'users') {
+        const filtered = allUsers.filter(u =>
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q)
+        );
+        renderUsersTable(filtered);
+      } else if (currentAdminView === 'orders') {
+        const filtered = allOrders.filter(o =>
+          o.id.toLowerCase().includes(q) ||
+          (o.customer && o.customer.email && o.customer.email.toLowerCase().includes(q)) ||
+          (o.customer && o.customer.name && o.customer.name.toLowerCase().includes(q))
+        );
+        renderOrdersTable(filtered);
+      } else {
+        const filtered = allProducts.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.description && p.description.toLowerCase().includes(q))
+        );
+        renderProductsTable(filtered);
+      }
     });
   }
 
@@ -468,6 +720,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       formImageUrl.value = data.url;
       showToast('Image uploaded ✓', 'success');
+      // Notify other tabs that products (images) changed
+      try { localStorage.setItem('nova_products_updated', Date.now().toString()); } catch (e) {}
     } catch (err) {
       console.error('Upload error:', err);
       showToast('Image upload failed', 'error');
@@ -574,6 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(editingProductId ? 'Product updated ✓' : 'Product created ✓', 'success');
       closeModal();
       await fetchProducts();
+      // Notify other tabs (storefront) that products changed
+      try { localStorage.setItem('nova_products_updated', Date.now().toString()); } catch (e) {}
       await fetchStats();
     } catch (err) {
       console.error('Save error:', err);
@@ -620,6 +876,8 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(`"${deletingProductName}" deleted`, 'success');
       closeDeleteModal();
       await fetchProducts();
+      // Notify other tabs (storefront) that products changed
+      try { localStorage.setItem('nova_products_updated', Date.now().toString()); } catch (e) {}
       await fetchStats();
     } catch (err) {
       console.error('Delete error:', err);
@@ -651,6 +909,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ═══════════════════════════════════════════════════
   fetchStats();
   fetchProducts();
+  fetchUsers();
+  fetchOrders();
 
   console.log('%c⚡ NOVA Admin Dashboard loaded', 'color:#7c5cfc;font-size:14px;font-weight:bold;');
 

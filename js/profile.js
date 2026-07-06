@@ -11,6 +11,16 @@
   const orderList = $('#order-list');
   const logoutBtn = $('#logout-btn');
 
+  function formatINR(amount) {
+    const num = Number(amount) || 0;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(num);
+  }
+
   function renderOrders(orders) {
     if (!orders || !orders.length) {
       orderList.innerHTML = '<p class="profile-note">No orders yet. Start shopping to see order history.</p>';
@@ -24,7 +34,7 @@
         </div>
         <div class="order-item-body">
           <div>${order.cart.length} item${order.cart.length === 1 ? '' : 's'}</div>
-          <div><strong>₹${(order.total * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></div>
+          <div><strong>${formatINR(order.total)}</strong></div>
         </div>
       </div>
     `).join('');
@@ -62,7 +72,7 @@
       const orderCountPill = $('#order-count-pill');
       const orderTotalPill = $('#order-total-pill');
       if (orderCountPill) orderCountPill.textContent = `${orderCount} order${orderCount === 1 ? '' : 's'}`;
-      if (orderTotalPill) orderTotalPill.textContent = `₹${(orderTotal * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })} spent`;
+      if (orderTotalPill) orderTotalPill.textContent = `${formatINR(orderTotal)} spent`;
     } catch (err) {
       console.error(err);
       orderList.innerHTML = '<p class="profile-note">Unable to load order history.</p>';
