@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartCount = $('#cart-count');
   const cartItemCount = $('#cart-item-count');
   const cartSubtotal = $('#cart-subtotal');
+  const wishlistBtn = $('#wishlist-btn');
   const wishlistCount = $('#wishlist-count');
   const searchBtn = $('#search-btn');
   const searchOverlay = $('#search-overlay');
@@ -116,6 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  if (wishlistBtn) wishlistBtn.addEventListener('click', () => {
+    window.location.href = '/wishlist.html';
+  });
 
   // Logout via long-press on login button (simple approach)
   if (loginBtn) {
@@ -495,6 +499,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // ═══════════════════════════════════════════════════
   // PRODUCT RENDERING
   // ═══════════════════════════════════════════════════
+  function deriveProductWeight(product) {
+    if (!product || !product.specs) return 'Standard';
+    if (product.specs.Weight) return product.specs.Weight;
+
+    const sizeSpec = product.specs.Dimensions || product.specs.Size || product.specs['Product Size'];
+    if (!sizeSpec) return 'Standard';
+
+    const digits = sizeSpec.match(/[\d.]+/g);
+    if (!digits || !digits.length) return 'Standard';
+
+    const values = digits.map(Number).filter(v => !Number.isNaN(v));
+    if (!values.length) return 'Standard';
+
+    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const estimatedGrams = sizeSpec.toLowerCase().includes('mm') ? avg : avg;
+
+    if (estimatedGrams >= 1000) {
+      return `${(estimatedGrams / 1000).toFixed(1)}kg`;
+    }
+    return `${Math.round(estimatedGrams)}g`;
+  }
+
   function renderProducts(productsToRender) {
     const productsGrid = $('#products-grid');
     if (!productsGrid) return;
@@ -524,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let starsHtml = '★'.repeat(Math.floor(product.rating)) + '☆'.repeat(5 - Math.floor(product.rating));
 
+      const displayWeight = deriveProductWeight(product);
       return `
         <div class="product-card reveal visible ${delayClass}" data-product-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${product.image}">
           <div class="product-image-wrapper">
@@ -539,9 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="product-info">
             <div class="product-category">${product.category}</div>
             <div class="product-name">${product.name}</div>
+            <div class="product-weight">${displayWeight}</div>
             <div class="product-rating">
               <div class="product-stars">${starsHtml}</div>
-              <span class="product-rating-text">(${product.rating} · ${(product.reviews/1000).toFixed(1)}k)</span>
+              <span class="product-rating-text">(${product.rating} · ${(product.reviews/1002).toFixed(1)}k)</span>
             </div>
             <div class="product-footer">
               <div class="product-price">${priceHtml}</div>
@@ -704,7 +732,8 @@ let priceHtml = `<span class="quickview-price">₹${(product.price * 83).toLocal
             </div>
           ` : ''}
 
-          <div class="quickview-actions">
+          <div class="quickview-weight">Weight: ${deriveProductWeight(product)}</div>
+      <div class="quickview-actions">
             <div class="quickview-qty">
               <button class="qty-btn" id="qv-qty-minus">−</button>
               <span class="qty-value" id="qv-qty-val">1</span>

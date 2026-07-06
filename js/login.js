@@ -40,13 +40,11 @@
   }
 
 
-  if (socialGoogle) socialGoogle.addEventListener('click', async () => {
-    const email = prompt('Enter test Google email:'); if (!email) return;
-    try {
-      const res = await fetch('/api/auth/social', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: 'google', email, name: '' }) });
-      const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Social failed');
-      setAuthToken(data.token); setAuthUser(data.user); showToast('Signed in'); location.href = '/';
-    } catch (err) { console.error(err); showToast(err.message || 'Social login failed'); }
+  if (socialGoogle) socialGoogle.addEventListener('click', (e) => {
+    e.preventDefault();
+    const googleUrl = 'https://accounts.google.com/signin/v2/identifier?service=mail';
+    window.open(googleUrl, '_blank', 'noopener');
+    showToast('Opening Google sign-in');
   });
 
 

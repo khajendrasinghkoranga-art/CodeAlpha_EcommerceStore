@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NOVA Store — Wishlist</title>
+  <base href="/">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive-fixes.css">
+</head>
+<body>
+  <main class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">♡ Wishlist</span>
+        <h1 class="section-title">Saved <span class="gradient-text">Favorites</span></h1>
+        <p class="section-subtitle">Your saved products are stored locally in your browser for easy access.</p>
+      </div>
+      <div id="wishlist-grid" class="products-grid"></div>
+      <div id="wishlist-empty" class="cart-empty" style="display:none; margin-top: 2rem;">
+        <div class="cart-empty-icon">♡</div>
+        <div class="cart-empty-text">Your wishlist is empty. Add a product to save it here.</div>
+      </div>
+    </div>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const wishlistGrid = document.getElementById('wishlist-grid');
+      const wishlistEmpty = document.getElementById('wishlist-empty');
+      const savedWishlist = localStorage.getItem('nova_wishlist');
+      const ids = savedWishlist ? JSON.parse(savedWishlist) : [];
+      const PRODUCTS_SOURCE = (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []);
+
+      if (!ids.length) {
+        wishlistGrid.style.display = 'none';
+        wishlistEmpty.style.display = 'block';
+        return;
+      }
+
+      const items = PRODUCTS_SOURCE.filter(product => ids.includes(product.id));
+      if (!items.length) {
+        wishlistGrid.style.display = 'none';
+        wishlistEmpty.style.display = 'block';
+        return;
+      }
+
+      wishlistGrid.innerHTML = items.map(product => `
+        <div class="product-card" data-product-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${product.image}">
+          <div class="product-image-wrapper">
+            <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+          </div>
+          <div class="product-info">
+            <div class="product-category">${product.category}</div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-weight">${product.specs?.Weight || 'Weight info available in product details'}</div>
+            <div class="product-price">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+          </div>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>
