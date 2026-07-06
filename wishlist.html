@@ -23,41 +23,156 @@
       </div>
     </div>
   </main>
+  <script src="js/products.js"></script>
   <script src="js/app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const wishlistGrid = document.getElementById('wishlist-grid');
       const wishlistEmpty = document.getElementById('wishlist-empty');
+      const wishlistSummary = document.createElement('div');
+      const wishlistToolbar = document.createElement('div');
+      const sortSelect = document.createElement('select');
+      const clearBtn = document.createElement('button');
+
+      wishlistSummary.className = 'wishlist-summary';
+      wishlistToolbar.className = 'wishlist-toolbar';
+      sortSelect.id = 'wishlist-sort-select';
+      sortSelect.className = 'sort-select';
+      clearBtn.className = 'btn btn-secondary';
+      clearBtn.id = 'wishlist-clear-btn';
+      clearBtn.textContent = 'Clear Wishlist';
+
+      sortSelect.innerHTML = `
+        <option value="recent">Sort: Recent</option>
+        <option value="name">Name A–Z</option>
+        <option value="price-low">Price: Low → High</option>
+        <option value="price-high">Price: High → Low</option>
+      `;
+
+      wishlistSummary.innerHTML = `
+        <span id="wishlist-count-badge" class="section-tag">♡ 0 items</span>
+        <span id="wishlist-total" class="section-tag" style="margin-left:auto">Total: ₹0</span>
+      `;
+      wishlistToolbar.appendChild(wishlistSummary);
+      wishlistToolbar.appendChild(sortSelect);
+      wishlistToolbar.appendChild(clearBtn);
+      wishlistGrid.parentNode.insertBefore(wishlistToolbar, wishlistGrid);
+
       const savedWishlist = localStorage.getItem('nova_wishlist');
-      const ids = savedWishlist ? JSON.parse(savedWishlist) : [];
+      let wishlistIds = savedWishlist ? JSON.parse(savedWishlist) : [];
       const PRODUCTS_SOURCE = (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []);
+      const productMap = new Map(PRODUCTS_SOURCE.map(product => [product.id, product]));
+      let currentSort = 'recent';
 
-      if (!ids.length) {
-        wishlistGrid.style.display = 'none';
-        wishlistEmpty.style.display = 'block';
-        return;
+      function formatPrice(value) {
+        return `₹${(value * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
       }
 
-      const items = PRODUCTS_SOURCE.filter(product => ids.includes(product.id));
-      if (!items.length) {
-        wishlistGrid.style.display = 'none';
-        wishlistEmpty.style.display = 'block';
-        return;
+      function getWishlistItems() {
+        return wishlistIds
+          .map(id => productMap.get(id))
+          .filter(Boolean);
       }
 
-      wishlistGrid.innerHTML = items.map(product => `
-        <div class="product-card" data-product-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${product.image}">
-          <div class="product-image-wrapper">
-            <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+      function saveWishlist(ids) {
+        wishlistIds = ids;
+        localStorage.setItem('nova_wishlist', JSON.stringify(wishlistIds));
+      }
+
+      function updateSummary(items) {
+        const countBadge = document.getElementById('wishlist-count-badge');
+        const totalLabel = document.getElementById('wishlist-total');
+        const totalValue = items.reduce((sum, product) => sum + (product.price || 0), 0);
+        if (countBadge) countBadge.textContent = `♡ ${items.length} item${items.length === 1 ? '' : 's'}`;
+        if (totalLabel) totalLabel.textContent = `Total: ${formatPrice(totalValue)}`;
+      }
+
+      function sortItems(items) {
+        if (currentSort === 'name') {
+          return [...items].sort((a, b) => a.name.localeCompare(b.name));
+        }
+        if (currentSort === 'price-low') {
+          return [...items].sort((a, b) => a.price - b.price);
+        }
+        if (currentSort === 'price-high') {
+          return [...items].sort((a, b) => b.price - a.price);
+        }
+        return items;
+      }
+
+      function renderWishlist() {
+        const items = sortItems(getWishlistItems());
+
+        if (!items.length) {
+          if (wishlistGrid) wishlistGrid.style.display = 'none';
+          if (wishlistEmpty) wishlistEmpty.style.display = 'block';
+          updateSummary([]);
+          return;
+        }
+
+        if (wishlistGrid) wishlistGrid.style.display = '';
+        if (wishlistEmpty) wishlistEmpty.style.display = 'none';
+
+        wishlistGrid.innerHTML = items.map(product => `
+          <div class="product-card wishlist-card" data-product-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${product.image}">
+            <div class="product-image-wrapper">
+              <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+            </div>
+            <div class="product-info">
+              <div class="product-category">${product.category}</div>
+              <div class="product-name">${product.name}</div>
+              <div class="product-weight">${product.specs?.Weight || 'Weight info available in product details'}</div>
+              <div class="product-price">${formatPrice(product.price)}</div>
+              <div class="product-footer wishlist-footer">
+                <button class="btn btn-secondary wishlist-remove-btn" data-product-id="${product.id}">Remove</button>
+                <button class="btn btn-primary wishlist-addcart-btn" data-product-id="${product.id}">Add to Cart</button>
+              </div>
+            </div>
           </div>
-          <div class="product-info">
-            <div class="product-category">${product.category}</div>
-            <div class="product-name">${product.name}</div>
-            <div class="product-weight">${product.specs?.Weight || 'Weight info available in product details'}</div>
-            <div class="product-price">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
-          </div>
-        </div>
-      `).join('');
+        `).join('');
+
+        updateSummary(items);
+      }
+
+      function removeFromWishlist(productId) {
+        const nextIds = wishlistIds.filter(id => id !== productId);
+        saveWishlist(nextIds);
+        renderWishlist();
+        showToast('Removed from wishlist', 'info');
+      }
+
+      wishlistGrid.addEventListener('click', (event) => {
+        const removeBtn = event.target.closest('.wishlist-remove-btn');
+        const addCartBtn = event.target.closest('.wishlist-addcart-btn');
+        if (removeBtn) {
+          const productId = removeBtn.dataset.productId;
+          removeFromWishlist(productId);
+          return;
+        }
+        if (addCartBtn) {
+          const productId = addCartBtn.dataset.productId;
+          if (window.novaStore && typeof window.novaStore.addToCart === 'function') {
+            window.novaStore.addToCart(productId);
+            showToast('Added to cart', 'success');
+          } else {
+            showToast('Cart is not available yet', 'warning');
+          }
+        }
+      });
+
+      sortSelect.addEventListener('change', () => {
+        currentSort = sortSelect.value;
+        renderWishlist();
+      });
+
+      clearBtn.addEventListener('click', () => {
+        if (!wishlistIds.length) return;
+        saveWishlist([]);
+        renderWishlist();
+        showToast('Wishlist cleared', 'info');
+      });
+
+      renderWishlist();
     });
   </script>
 </body>

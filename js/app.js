@@ -143,17 +143,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollY = window.scrollY;
 
     // Navbar background on scroll
-    if (scrollY > 50) {
-      navbar.classList.add('scrolled');
-    } else {
-      navbar.classList.remove('scrolled');
+    if (navbar) {
+      if (scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
     }
 
     // Back to Top visibility
-    if (scrollY > 600) {
-      backToTop.classList.add('visible');
-    } else {
-      backToTop.classList.remove('visible');
+    if (backToTop) {
+      if (scrollY > 600) backToTop.classList.add('visible');
+      else backToTop.classList.remove('visible');
     }
 
     // Active nav link based on section
@@ -163,23 +161,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
   // Hamburger toggle
-  hamburger.addEventListener('click', () => {
-    navMenu.classList.toggle('active');
-    const spans = hamburger.querySelectorAll('span');
-    if (navMenu.classList.contains('active')) {
-      spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-      spans[1].style.opacity = '0';
-      spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-    } else {
-      spans[0].style.transform = '';
-      spans[1].style.opacity = '';
-      spans[2].style.transform = '';
-    }
-  });
+  if (hamburger && navMenu) {
+    hamburger.addEventListener('click', () => {
+      navMenu.classList.toggle('active');
+      const spans = hamburger.querySelectorAll('span');
+      if (navMenu.classList.contains('active')) {
+        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+        spans[1].style.opacity = '0';
+        spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+      } else {
+        spans[0].style.transform = '';
+        spans[1].style.opacity = '';
+        spans[2].style.transform = '';
+      }
+    });
+  }
 
   // Close mobile menu on link click
   $$('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
+      if (!navMenu || !hamburger) return;
       navMenu.classList.remove('active');
       const spans = hamburger.querySelectorAll('span');
       spans[0].style.transform = '';
@@ -232,9 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
   }
 
-  cartBtn.addEventListener('click', openCart);
-  cartClose.addEventListener('click', closeCart);
-  cartOverlay.addEventListener('click', closeCart);
+  if (cartBtn) cartBtn.addEventListener('click', openCart);
+  if (cartClose) cartClose.addEventListener('click', closeCart);
+  if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
 
   function addToCart(productId) {
     let name = '';
@@ -303,9 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalItems = state.cart.reduce((sum, item) => sum + item.qty, 0);
     const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-    cartCount.textContent = totalItems;
-    cartItemCount.textContent = totalItems;
-    cartSubtotal.textContent = `₹${(subtotal * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if (cartCount) cartCount.textContent = totalItems;
+    if (cartItemCount) cartItemCount.textContent = totalItems;
+    if (cartSubtotal) cartSubtotal.textContent = `₹${(subtotal * 83).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+    if (!cartItems) return;
 
     if (state.cart.length === 0) {
       cartItems.innerHTML = `
@@ -334,10 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   }
 
-  // Expose cart methods globally for onclick handlers
+  // Expose cart methods globally for onclick handlers and external pages
   window.novaStore = {
     updateQty: (id, delta) => updateCartQty(id, delta),
     removeItem: (id) => removeFromCart(id),
+    addToCart: (id) => addToCart(id),
   };
 
     // Re-attach product events happens after render products, but we still need to remove old ones.
@@ -362,10 +366,12 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.value = '';
   }
 
-  searchBtn.addEventListener('click', openSearch);
-  searchOverlay.addEventListener('click', (e) => {
-    if (e.target === searchOverlay) closeSearch();
-  });
+  if (searchBtn) searchBtn.addEventListener('click', openSearch);
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', (e) => {
+      if (e.target === searchOverlay) closeSearch();
+    });
+  }
 
   // Keyboard shortcut: Ctrl+K to open search, ESC to close
   document.addEventListener('keydown', (e) => {
@@ -436,14 +442,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ═══════════════════════════════════════════════════
   // NEWSLETTER
   // ═══════════════════════════════════════════════════
-  newsletterForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = $('#newsletter-email').value;
-    if (email) {
-      showToast('Welcome aboard! Check your inbox 📧', 'success');
-      $('#newsletter-email').value = '';
-    }
-  });
+  if (newsletterForm) {
+    newsletterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = $('#newsletter-email').value;
+      if (email) {
+        showToast('Welcome aboard! Check your inbox 📧', 'success');
+        $('#newsletter-email').value = '';
+      }
+    });
+  }
 
   // ═══════════════════════════════════════════════════
   // TOAST NOTIFICATIONS
@@ -610,13 +618,22 @@ document.addEventListener('DOMContentLoaded', () => {
     dealGrid.innerHTML = uniqueDealItems.map((product, index) => {
       const badgeLabel = product.badge === 'hot' ? 'Hot' : product.badge === 'sale' ? 'Sale' : 'Featured';
       return `
-        <article class="deal-card reveal reveal-delay-${(index % 4) + 1}">
+        <article class="deal-card reveal reveal-delay-${(index % 4) + 1}" data-product-id="${product.id}">
           <img src="${product.image}" alt="${product.name}">
+          <div class="deal-card-actions">
+            <button class="product-action-btn wishlist-toggle" aria-label="Add to wishlist" data-product-id="${product.id}">
+              ${state.wishlist.has(product.id) ? '♥' : '♡'}
+            </button>
+            <button class="product-action-btn quick-view-btn" aria-label="Quick view" data-product-id="${product.id}">👁</button>
+          </div>
           <div class="deal-card-category">${product.category}</div>
           <h3 class="deal-card-title">${product.name}</h3>
           <div class="deal-card-price">₹${(product.price * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
           ${product.originalPrice ? `<div class="deal-card-original">₹${(product.originalPrice * 83).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>` : ''}
           ${product.badge ? `<span class="deal-card-badge">${badgeLabel}</span>` : ''}
+          <div class="deal-card-footer">
+            <button class="product-add-btn add-to-cart" aria-label="Add to cart" data-product-id="${product.id}">+</button>
+          </div>
         </article>
       `;
     }).join('');
@@ -624,11 +641,16 @@ document.addEventListener('DOMContentLoaded', () => {
     dealGrid.querySelectorAll('.deal-card.reveal').forEach(card => {
       revealObserver.observe(card);
     });
+
+    // Attach shared product events for deal cards as well
+    attachProductEvents();
   }
 
   function attachProductEvents() {
     // Add to cart
     $$('.add-to-cart').forEach(btn => {
+      if (btn.dataset.novaBound) return;
+      btn.dataset.novaBound = 'true';
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const productId = btn.dataset.productId;
@@ -638,6 +660,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Wishlist toggle
     $$('.wishlist-toggle').forEach(btn => {
+      if (btn.dataset.novaBound) return;
+      btn.dataset.novaBound = 'true';
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.dataset.productId;
@@ -655,12 +679,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         saveWishlistToLocalStorage();
-        wishlistCount.textContent = state.wishlist.size;
+        if (wishlistCount) wishlistCount.textContent = state.wishlist.size;
       });
     });
 
     // Quick View click handler
     $$('.quick-view-btn').forEach(btn => {
+      if (btn.dataset.novaBound) return;
+      btn.dataset.novaBound = 'true';
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.dataset.productId;
@@ -670,6 +696,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tilt effect
     $$('.product-card').forEach(card => {
+      if (card.dataset.novaTiltBound) return;
+      card.dataset.novaTiltBound = 'true';
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
         const x = (e.clientX - rect.left) / rect.width;
